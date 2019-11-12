@@ -8,7 +8,7 @@
 
 # ## Data Visualization , Preparation and Preprocessing
 
-# In[39]:
+# In[ ]:
 
 
 import sys
@@ -16,12 +16,12 @@ import pandas as pd
 import numpy as np
 
 data = pd.read_csv('PEI_NOS_DATA.csv', sep=';', na_values=['NaN'])
-
+data = data.sample(frac=1).reset_index(drop=True) # shuffle the data
 print('Data size: ', data.shape)
 data.head()
 
 
-# In[40]:
+# In[ ]:
 
 
 data.describe()
@@ -29,18 +29,18 @@ data.describe()
 
 # We will remove some clearly not important features for this problem!
 
-# In[41]:
+# In[ ]:
 
 
-data = data[data.columns.difference(['Data_Hora_Criacao', 'Contexto_Saida', 'Descricao_Contexto_Saida', 'CA_key', 'UserKey_Current','Area_Key'])]
 data = data[data['Estado_Registo_Siebel'] == "FECHADO"]
+data = data[data.columns.difference(['Data_Hora_Criacao', 'Contexto_Saida', 'Descricao_Contexto_Saida', 'CA_key', 'UserKey_Current','Area_Key','Acao_Siebel','Estado_Registo_Siebel'])]
 data.describe()
 
 
 # ### Missing data
 # Missing data is negligible, we can drop it.
 
-# In[42]:
+# In[ ]:
 
 
 # to see the missing data context for some column
@@ -51,76 +51,64 @@ data.describe()
 
 # Distribution of target "Pagina_Saida" and other features
 
-# In[43]:
+# In[ ]:
 
 
 data.groupby(['Pagina_Saida']).agg(['count'])
 
 
-# In[44]:
-
-
-data.groupby(['Acao_Siebel']).agg(['count'])
-
-
-# In[45]:
-
-
-data.groupby(['Estado_Registo_Siebel']).agg(['count'])
-
-
-# In[46]:
+# In[ ]:
 
 
 data.groupby(['Origem_Despiste']).agg(['count'])
 
 
-# In[47]:
+# In[ ]:
 
 
 data.groupby(['Servico']).agg(['count'])
 
 
-# In[48]:
+# In[ ]:
 
 
 data.groupby(['Sintoma']).agg(['count'])
 
 
-# In[49]:
+# In[ ]:
 
 
 data.groupby(['Tecnologia']).agg(['count'])
 
 
-# In[50]:
+# In[ ]:
 
 
 data.groupby(['Tipificacao_Nivel_1']).agg(['count'])
 
 
-# In[51]:
+# In[ ]:
 
 
 data.groupby(['Tipificacao_Nivel_2']).agg(['count'])
 
 
-# In[52]:
+# In[ ]:
 
 
 data.groupby(['Tipificacao_Nivel_3']).agg(['count'])
 
 
-# In[53]:
+# In[ ]:
 
 
 features = data[data.columns.difference(['Pagina_Saida'])]
 target = data['Pagina_Saida']
 
 
-# ### Data Normalization
+# ### Data Discretization
 
-# In[54]:
+# In[ ]:
 
 
 from sklearn import preprocessing
@@ -138,7 +126,7 @@ print(features_encoded.head())
 
 # ### Feature selection
 
-# In[55]:
+# In[ ]:
 
 
 from sklearn.feature_selection import SelectKBest
@@ -156,7 +144,7 @@ def features_scores(scores):
         i+=1
 
 #Feature Selection - Univariate Selection
-k=11
+k=9
 test = SelectKBest(score_func = mutual_info_classif, k = k)
 fit = test.fit(all_features, target)
 # Sumarize Scores
@@ -169,7 +157,7 @@ print(all_features.shape)
 # to test later diferent numbers of features
 i=5
 features_list=[]
-while i<=10:
+while i<=8:
     print("Num Features:",i)
     n=i
     test = SelectKBest(score_func = mutual_info_classif, k = n)
@@ -182,7 +170,9 @@ while i<=10:
 
 # ## Training and Validation
 
-# In[56]:
+# ### Number of features testing with Decision Tree
+
+# In[ ]:
 
 
 from sklearn.tree import DecisionTreeClassifier
@@ -193,7 +183,7 @@ clf = DecisionTreeClassifier(random_state=1)
 cv_scores = cross_val_score(clf, all_features, target, cv=10)
 
 
-# to fit with  diferent numbers of features
+# testing diferent numbers of features
 i=5
 for ft in features_list:
     cv_scores = cross_val_score(clf, ft, target, cv=10)
@@ -202,31 +192,160 @@ for ft in features_list:
     i+=1
 
 
+# ### Decision Tree
+
+# In[ ]:
+
+
+import numpy
+from sklearn.model_selection import train_test_split
+(training_inputs,testing_inputs,training_classes, testing_classes) = train_test_split(all_features, target, train_size=0.75, random_state=1)
+
+print('training_input.shape: ', training_inputs.shape)
+print('training_output.shape: ', training_classes.shape)
+print('testing_input.shape: ', testing_inputs.shape)
+print('testing_output.shape: ', testing_classes.shape)
+
+
+# In[ ]:
+
+
+from sklearn.tree import DecisionTreeClassifier
+
+dt= DecisionTreeClassifier(random_state=1)
+dt.fit(training_inputs, training_classes)
+
+
+# In[ ]:
+
+
+from IPython.display import Image  
+from sklearn.externals.six import StringIO  
+from sklearn import tree
+from pydotplus import graph_from_dot_data 
+
+dot_data = StringIO()  
+tree.export_graphviz(dt, out_file=dot_data)  
+                       #  feature_names=feature_names)  
+graph = graph_from_dot_data(dot_data.getvalue())  
+Image(graph.create_png())
+
+
+# In[ ]:
+
+
+dt.score(testing_inputs, testing_classes)
+
+
+# ### Random Forest
+
+# In[ ]:
+
+
+from sklearn.ensemble import RandomForestClassifier
+
+rf = RandomForestClassifier(n_estimators=10, random_state=1)
+# Train the classifier on the training set
+rf.fit(training_inputs, training_classes)
+rf.score(testing_inputs, testing_classes)
+
+
+# ### SVM
+
+# In[ ]:
+
+
+from sklearn import svm
+
+C = 1.0
+svc = svm.SVC(kernel='linear', C=C)
+svc.fit(training_inputs, training_classes)
+svc.score(testing_inputs, testing_classes)
+
+
+# ### KNN
+
+# In[ ]:
+
+
+from sklearn import neighbors
+
+knn = neighbors.KNeighborsClassifier(n_neighbors=10)
+knn.fit(training_inputs, training_classes)
+knn.score(testing_inputs, testing_classes)
+for n in range(1, 50):
+    knn = neighbors.KNeighborsClassifier(n_neighbors=n)
+    knn.fit(training_inputs, training_classes)
+    score = knn.score(testing_inputs, testing_classes)
+    print (n, score)
+
+
+# ### Naive Bayes
+
+# In[ ]:
+
+
+from sklearn.naive_bayes import MultinomialNB
+nb = MultinomialNB()
+nb.fit(training_inputs, training_classes)
+nb.score(testing_inputs, testing_classes)
+
+
+# ### Logistic Regression
+
+# In[ ]:
+
+
+from sklearn.linear_model import LogisticRegression
+
+lr = LogisticRegression()
+lr.fit(training_inputs, training_classes)
+lr.score(testing_inputs, testing_classes)
+
+
+# ### SGD
+
+# In[ ]:
+
+
+from sklearn.linear_model import SGDClassifier
+
+sgd = SGDClassifier()
+sgd.fit(training_inputs, training_classes)
+sgd.score(testing_inputs, testing_classes)
+
+
+# ### Neural network
+
+# In[ ]:
+
+
+# todo
+
+
 # ## Hyperparameters Optimization
 
 # In[ ]:
 
 
-
+# todo
 
 
 # ## Prediction
 
-# In[58]:
+# In[ ]:
 
 
 print("Input Format:%s" % (features.columns.tolist()))
 
 
-# In[59]:
+# In[ ]:
 
 
 # prediction input
 model = clf
 newInput = [[
-              "Avaria Individual",
               "HUB 3.0",
-              "FECHADO",
               "UDP",
               "Voz",
               "Sem Acesso",
