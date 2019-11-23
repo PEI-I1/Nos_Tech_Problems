@@ -8,39 +8,39 @@
 
 # ## Data Visualization , Preparation and Preprocessing
 
-# In[ ]:
+# In[1]:
 
 
 import sys
 import pandas as pd
 import numpy as np
 
-data = pd.read_csv('PEI_NOS_DATA.csv', sep=';', na_values=['NaN'])
+data = pd.read_csv('PEI_NOS_DATA.csv', sep=';', na_values=['NaN'],encoding='utf8')
 data = data.sample(frac=1).reset_index(drop=True) # shuffle the data
 print('Data size: ', data.shape)
 data.head()
 
 
-# In[ ]:
+# In[2]:
 
 
 data.describe()
 
 
-# We will remove some clearly not important features for this problem!
+# ### We will remove some clearly not important features for this problem! Selecting only closed cases!
 
-# In[ ]:
+# In[3]:
 
 
 data = data[data['Estado_Registo_Siebel'] == "FECHADO"]
-data = data[data.columns.difference(['Data_Hora_Criacao', 'Contexto_Saida', 'Descricao_Contexto_Saida', 'CA_key', 'UserKey_Current','Area_Key','Acao_Siebel','Estado_Registo_Siebel'])]
+data = data[data.columns.difference(['Data_Hora_Criacao', 'Pagina_Saida', 'Descricao_Contexto_Saida', 'CA_key', 'UserKey_Current','Area_Key','Acao_Siebel','Estado_Registo_Siebel'])]
 data.describe()
 
 
 # ### Missing data
 # Missing data is negligible, we can drop it.
 
-# In[ ]:
+# In[4]:
 
 
 # to see the missing data context for some column
@@ -49,66 +49,70 @@ data.dropna(inplace=True)
 data.describe()
 
 
-# Distribution of target "Pagina_Saida" and other features
+# ### Target Cleaning
 
-# In[ ]:
-
-
-data.groupby(['Pagina_Saida']).agg(['count'])
+# In[5]:
 
 
-# In[ ]:
+data['Contexto_Saida'].value_counts().nlargest(n=15)
 
 
-data.groupby(['Origem_Despiste']).agg(['count'])
+# In[6]:
 
 
-# In[ ]:
+print(data['Contexto_Saida'].describe(),"\n")
+data = data[~data['Contexto_Saida'].str.lower().str.contains("despiste") == True ]
+print(data['Contexto_Saida'].describe(),"\n")
+data = data[~data['Tipificacao_Nivel_1'].str.lower().str.contains("despiste") == True ]
+print(data['Contexto_Saida'].describe(),"\n")
+data = data[~data['Tipificacao_Nivel_2'].str.lower().str.contains("despiste") == True ]
+print(data['Contexto_Saida'].describe(),"\n")
+data = data[~data['Tipificacao_Nivel_3'].str.lower().str.contains("despiste") == True ]
+print(data['Contexto_Saida'].describe(),"\n")
+#data = data[~data['Contexto_Saida'].str.lower().str.contains("fechado") == False ]
+#print(data['Contexto_Saida'].describe(),"\n")
+data = data[~data['Contexto_Saida'].str.lower().str.strip().str.replace('ă', 'ã').str.contains("não resolv") == True ]
+print(data['Contexto_Saida'].describe(),"\n")
+#data = data[~data['Contexto_Saida'].str.lower().str.contains("resolv") == False ]
+#print(data['Contexto_Saida'].describe(),"\n")
+data['Contexto_Saida'].value_counts().nlargest(n=15)
 
 
-data.groupby(['Servico']).agg(['count'])
+# ### Removing less frequent target's
+
+# In[7]:
 
 
-# In[ ]:
+threshold = 50 # Anything that occurs less than this will be removed.
+value_counts = data.stack().value_counts() # Entire DataFrame 
+to_remove = value_counts[value_counts <= threshold].index
+data.replace(to_remove, np.nan, inplace=True)
+data.dropna(inplace=True)
+data.groupby(['Contexto_Saida']).agg(['count'])
 
 
-data.groupby(['Sintoma']).agg(['count'])
+# In[8]:
 
 
-# In[ ]:
+data['Contexto_Saida'].describe()
 
 
-data.groupby(['Tecnologia']).agg(['count'])
+# In[9]:
 
 
-# In[ ]:
+features = data[data.columns.difference(['Contexto_Saida'])]
+target = data['Contexto_Saida']
 
 
-data.groupby(['Tipificacao_Nivel_1']).agg(['count'])
+# In[10]:
 
 
-# In[ ]:
-
-
-data.groupby(['Tipificacao_Nivel_2']).agg(['count'])
-
-
-# In[ ]:
-
-
-data.groupby(['Tipificacao_Nivel_3']).agg(['count'])
-
-
-# In[ ]:
-
-
-features = data[data.columns.difference(['Pagina_Saida'])]
-target = data['Pagina_Saida']
+target.value_counts().nlargest(n=10)
 
 
 # ### Data Discretization
 
-# In[ ]:
+# In[11]:
 
 
 from sklearn import preprocessing
@@ -118,15 +122,126 @@ d = defaultdict(preprocessing.LabelEncoder)
 # Encoding the variable
 features_encoded = features.apply(lambda x: d[x.name].fit_transform(x))
 
-#scaler = preprocessing.LabelEncoder()
-#features_encoded = features.apply(scaler.fit_transform)
-#features_encoded.head()
 print(features_encoded.head())
+
+
+# ### More Target Balancing -> Todo
+
+# In[12]:
+
+
+"""
+unique, counts = np.unique(target, return_counts=True)
+MAX_SIZE = 1000
+ratio={}
+i=0
+while i<len(unique) :
+    real_max = counts[i]
+    if counts[i]>=MAX_SIZE :
+        real_max=MAX_SIZE 
+    ratio.update( {unique[i] : real_max } )
+    i+=1
+
+from imblearn.under_sampling import NearMiss
+from imblearn.under_sampling import ClusterCentroids
+
+nm = NearMiss(ratio=ratio,version=1)
+X_res, y_res = nm.fit_resample(features_encoded, target)
+
+features_encoded = pd.DataFrame(X_res , columns =features.columns.tolist()) 
+target = pd.Series(data = y_res )
+"""
+
+
+# In[13]:
+
+
+target.describe()
+
+
+# In[14]:
+
+
+target.value_counts().nlargest(n=10)
+
+
+# In[15]:
+
+
+target.value_counts().nsmallest(n=10)
+
+
+# In[16]:
+
+
+import matplotlib.pyplot as plt
+unique, counts = np.unique(target, return_counts=True)
+plt.bar(unique, counts, 1)
+plt.title('Class Frequency')
+plt.xlabel('Class')
+plt.ylabel('Frequency')
+plt.show()
+
+
+# ### Distribution of features
+
+# In[17]:
+
+
+features.groupby(['Origem_Despiste']).agg(['count'])
+
+
+# In[18]:
+
+
+features.groupby(['Servico']).agg(['count'])
+
+
+# In[19]:
+
+
+features.groupby(['Sintoma']).agg(['count'])
+
+
+# In[20]:
+
+
+features.groupby(['Tecnologia']).agg(['count'])
+
+
+# In[21]:
+
+
+features.groupby(['Tarifario']).agg(['count'])
+
+
+# In[22]:
+
+
+features.groupby(['Equipamento_Tipo']).agg(['count'])
+
+
+# In[23]:
+
+
+features.groupby(['Tipificacao_Nivel_1']).agg(['count'])
+
+
+# In[24]:
+
+
+features.groupby(['Tipificacao_Nivel_2']).agg(['count'])
+
+
+# In[25]:
+
+
+features.groupby(['Tipificacao_Nivel_3']).agg(['count'])
 
 
 # ### Feature selection
 
-# In[ ]:
+# In[26]:
 
 
 from sklearn.feature_selection import SelectKBest
@@ -144,9 +259,11 @@ def features_scores(scores):
         i+=1
 
 #Feature Selection - Univariate Selection
-k=9
+k=7
 test = SelectKBest(score_func = mutual_info_classif, k = k)
 fit = test.fit(all_features, target)
+cols = test.get_support(indices=True)
+
 # Sumarize Scores
 features_scores(fit.scores_)
 np.set_printoptions(precision=3)
@@ -172,7 +289,7 @@ while i<=8:
 
 # ### Number of features testing with Decision Tree
 
-# In[ ]:
+# In[27]:
 
 
 from sklearn.tree import DecisionTreeClassifier
@@ -192,9 +309,9 @@ for ft in features_list:
     i+=1
 
 
-# ### Decision Tree
+# ### Split train and test data
 
-# In[ ]:
+# In[28]:
 
 
 import numpy
@@ -207,7 +324,46 @@ print('testing_input.shape: ', testing_inputs.shape)
 print('testing_output.shape: ', testing_classes.shape)
 
 
-# In[ ]:
+# ### Target Distribution
+
+# In[29]:
+
+
+unique, counts = np.unique(training_classes, return_counts=True)
+plt.bar(unique, counts)
+unique, counts = np.unique(testing_classes, return_counts=True)
+plt.bar(unique, counts)
+
+plt.title('Class Frequency')
+plt.xlabel('Class')
+plt.ylabel('Frequency')
+
+plt.show()
+
+
+# In[30]:
+
+
+total_training = len(training_classes)
+total_testing = len(testing_classes)
+unique, counts = np.unique(training_classes, return_counts=True)
+plt.bar(unique, counts/total_training)
+plt.title('Class Frequency Training %')
+plt.xlabel('Class')
+plt.ylabel('Frequency')
+plt.show()
+
+unique, counts = np.unique(testing_classes, return_counts=True)
+plt.bar(unique, counts/total_testing)
+plt.title('Class Frequency Testing %')
+plt.xlabel('Class')
+plt.ylabel('Frequency')
+plt.show()
+
+
+# ### Decision Tree
+
+# In[31]:
 
 
 from sklearn.tree import DecisionTreeClassifier
@@ -216,7 +372,7 @@ dt= DecisionTreeClassifier(random_state=1)
 dt.fit(training_inputs, training_classes)
 
 
-# In[ ]:
+# In[32]:
 
 
 from IPython.display import Image  
@@ -231,15 +387,19 @@ graph = graph_from_dot_data(dot_data.getvalue())
 Image(graph.create_png())
 
 
-# In[ ]:
+# In[33]:
 
 
-dt.score(testing_inputs, testing_classes)
+all_scores=[]
+
+score = dt.score(testing_inputs, testing_classes)
+all_scores.append(score)
+score
 
 
 # ### Random Forest
 
-# In[ ]:
+# In[34]:
 
 
 from sklearn.ensemble import RandomForestClassifier
@@ -247,12 +407,15 @@ from sklearn.ensemble import RandomForestClassifier
 rf = RandomForestClassifier(n_estimators=10, random_state=1)
 # Train the classifier on the training set
 rf.fit(training_inputs, training_classes)
-rf.score(testing_inputs, testing_classes)
+score = rf.score(testing_inputs, testing_classes)
+all_scores.append(score)
+score
 
 
 # ### SVM
 
-# In[ ]:
+# In[35]:
+
 
 
 from sklearn import svm
@@ -260,12 +423,14 @@ from sklearn import svm
 C = 1.0
 svc = svm.SVC(kernel='linear', C=C)
 svc.fit(training_inputs, training_classes)
-svc.score(testing_inputs, testing_classes)
+score = svc.score(testing_inputs, testing_classes)
+all_scores.append(score)
+score
 
 
 # ### KNN
 
-# In[ ]:
+# In[36]:
 
 
 from sklearn import neighbors
@@ -273,100 +438,174 @@ from sklearn import neighbors
 knn = neighbors.KNeighborsClassifier(n_neighbors=10)
 knn.fit(training_inputs, training_classes)
 knn.score(testing_inputs, testing_classes)
+best_score=0
 for n in range(1, 50):
     knn = neighbors.KNeighborsClassifier(n_neighbors=n)
     knn.fit(training_inputs, training_classes)
     score = knn.score(testing_inputs, testing_classes)
+    if (score>best_score) :
+        best_score = score
     print (n, score)
+
+all_scores.append(best_score)
 
 
 # ### Naive Bayes
 
-# In[ ]:
+# In[37]:
 
 
 from sklearn.naive_bayes import MultinomialNB
 nb = MultinomialNB()
 nb.fit(training_inputs, training_classes)
-nb.score(testing_inputs, testing_classes)
+score = nb.score(testing_inputs, testing_classes)
+all_scores.append(score)
+score
 
 
 # ### Logistic Regression
 
-# In[ ]:
+# In[38]:
 
 
 from sklearn.linear_model import LogisticRegression
 
 lr = LogisticRegression()
 lr.fit(training_inputs, training_classes)
-lr.score(testing_inputs, testing_classes)
+score = lr.score(testing_inputs, testing_classes)
+all_scores.append(score)
+score
 
 
 # ### SGD
 
-# In[ ]:
+# In[39]:
 
 
 from sklearn.linear_model import SGDClassifier
 
 sgd = SGDClassifier()
 sgd.fit(training_inputs, training_classes)
-sgd.score(testing_inputs, testing_classes)
+score = sgd.score(testing_inputs, testing_classes)
+all_scores.append(score)
+score
 
 
 # ### Neural network
 
-# In[ ]:
+# In[40]:
 
 
 # todo
+
+
+# ###  Overview  of all models
+
+# In[41]:
+
+
+print(all_scores)
+print("Average of all models:",sum(all_scores)/len(all_scores))
+# Last best = 0.67
+# Last avg = 0.57
 
 
 # ## Hyperparameters Optimization
 
-# In[ ]:
+# In[42]:
 
 
 # todo
 
 
-# ## Prediction
+# # Save model function
 
-# In[ ]:
-
-
-print("Input Format:%s" % (features.columns.tolist()))
+# In[43]:
 
 
-# In[ ]:
+import pickle
+def save_model(model,filename):
+ pickle.dump(model, open(filename, 'wb'))
+
+
+# # Open model
+
+# In[44]:
+
+
+def load_model(filename):
+    model =pickle.load(open(filename, 'rb'))
+    return model
+
+
+# # Prediction
+
+# In[70]:
+
+
+columns_all = features.columns.tolist()
+columns = []
+for i in cols :
+    columns.append(columns_all[i])
+    i+=1
+print("Input Format:%s" % (columns))
+
+
+# In[83]:
+
+
+import json
+
+def features_uniques(features) :
+    features_uniques={}
+    for key, value in features.iteritems(): 
+        features_uniques.update({key : np.unique(features[key]).tolist() })
+    return features_uniques
+
+def save_dict_json(data,filename) : 
+    with open(filename, 'w',encoding='utf8') as fp:
+        json.dump(data, fp, indent=4, sort_keys=True,ensure_ascii=False)
+
+input_options = features_uniques(features)
+save_dict_json(input_options,"input_options.json")
+input_options
+
+
+# In[46]:
+
+
+def predict_resolution(inputList,model):
+    newInput = [ inputList ]
+    newInputDf = pd.DataFrame(newInput , columns =columns) 
+    input_encoded =newInputDf.apply(lambda x: d[x.name].transform(x))
+    input_encoded = input_encoded.values.tolist()
+
+    model.fit(training_inputs, training_classes)
+    score = model.score(testing_inputs, testing_classes)
+    
+    # make a prediction
+    ynew = model.predict(input_encoded)
+    probability = np.amax(model.predict_proba(input_encoded)) * 100
+    return ynew[0],probability
+
+
+# In[47]:
 
 
 # prediction input
-model = clf
-newInput = [[
+save_model(rf,"model")
+model = load_model("model")
+newInput = [
               "HUB 3.0",
-              "UDP",
-              "Voz",
-              "Sem Acesso",
-              "Phone Ilimitado",
-              "HFC",
+      #        "UDP",
+              "Internet",
+              "Velocidades Lentas",
+              "Net Wideband Top - 120Mb",
+       #       "HFC",
               "SERVIÇO INTERNET CABO",
-              "SEM ACESSO",
-              "DESPISTE INTERROMPIDO"
-]]
-newInputDf = pd.DataFrame(newInput , columns =features.columns.tolist()) 
-input_encoded =newInputDf.apply(lambda x: d[x.name].transform(x))
-input_encoded = input_encoded.values.tolist()
-
-model.fit(all_features, target)
-# make a prediction
-ynew = model.predict(input_encoded)
-print("X=%s\n\nX_encoded=%s\n\nPredicted=%s" % (newInput[0],input_encoded[0], ynew[0]))
-
-
-# In[ ]:
-
-
-
+              "LENTIDAO ACESSO WIRELESS",
+              "DIFICULDADE DE UTILIZAÇĂO"
+]
+prediction,probability = predict_resolution(newInput,model)
+print("X = %s\n\nPredicted = %s\n\nProbability = %.0f%%" % (newInput, prediction ,probability))
 
