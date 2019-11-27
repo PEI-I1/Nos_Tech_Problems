@@ -1,0 +1,5 @@
+{
+    "equipamento": ["box", "router", "televisão", "telefone", "internet"],
+    "wireless": ["wifi", "internet", "rede", " net", "ligação"],
+    "ruído": ["barulhento", "barulhenta"]
+}
