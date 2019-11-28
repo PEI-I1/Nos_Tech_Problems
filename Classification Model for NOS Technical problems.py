@@ -74,18 +74,17 @@ print(data['Contexto_Saida'].describe(),"\n")
 data['Contexto_Saida'].value_counts().nlargest(n=15)
 
 
-# In[52]:
+# In[7]:
 
 
 import re
-
 def clean_contexto_saida(st) :
     #str = "[Quebras wireless] - Hub;bloco Hard-eset resolve;;   ;;;;  ;;;22141241;Atinge velocade;reslvido;clt năo aceta propostas"
-    st = st.lower().strip().replace('ă', 'ã')
-    comun_res =  re.search(r"((dvl)|(bloco configs)|(hard-reset))", st)
+    st = st.lower().strip().replace('ă', 'ã').replace('ő','õ')
+    comun_res =  re.search(r"((bloco configs)|(hard-reset))", st)
     if comun_res is not None:
         st = comun_res.group()
-        st = re.sub(r"\W*","", st)
+      #  st = re.sub(r"\W*","", st)
 
     st = re.sub(r"\[.*\]\W*","", st)
 
@@ -98,13 +97,27 @@ def clean_contexto_saida(st) :
         split = split_hyphen
 
     n_split = len(split) 
-
-    regex = re.compile(r"^((fechado)|(clt não aceita propostas)|(resolv\w+)|(atinge velocidade)|(^\d*$)|(^\W*$))$")
+    
+    regex = re.compile(r"^((\s*fechado\s*)|(.*mantém dificuldade.*)|(.*hit ok.*)|(.*cliente informado.*)|(\W*outro equipamento.*)|(.*não pretende soluções.*)|(.*não aceita propostas.*)|(\W*resolv\w[\w\s]*)|(.*atinge velocidade.*)|(^\d*$)|(^\W*$)|(.*aceita proposta sugerida\W*)|(\W*loja\W*)|(.*não consegue realizar procedimento\W*))$")
     filtered = [i for i in split if not regex.match(i)]
-    result = ''
     if (len(filtered)>0) :
         result = filtered[ len(filtered) - 1 ]
-    return result
+        if ('fora de portugal continental' in result) :
+            result = 'pesquisa canais'
+        if ('box bloqueada' in result) :
+            result = 'dvl box ou repor parâmetros parcial painel'
+        if ('hitron' in result) or ('sintoma direitos' in result) :
+            return np.nan
+        return str(result).strip()
+    else :
+        return np.nan
+
+
+# In[8]:
+
+
+s = "[Quebras wireless] - Hub;bloco Hard-eset resolve;;   ;;;;  ;;;22141241;Atinge velocade;reslvido;não pretende soluçőes"
+clean_contexto_saida(s)
 
 
 # In[9]:
@@ -123,10 +136,10 @@ data['Contexto_Saida'].value_counts().nlargest(n=15)
 # In[10]:
 
 
-threshold = 20 # Anything that occurs less than this will be removed.
-value_counts = data.stack().value_counts() # Entire DataFrame 
+threshold = 150 # Anything that occurs less than this will be removed.
+value_counts = data['Contexto_Saida'].value_counts() # Entire DataFrame 
 to_remove = value_counts[value_counts <= threshold].index
-data.replace(to_remove, np.nan, inplace=True)
+data['Contexto_Saida'].replace(to_remove,'linhas apoio', inplace=True)
 data.dropna(inplace=True)
 data.groupby(['Contexto_Saida']).agg(['count'])
 
@@ -202,7 +215,7 @@ target.describe()
 # In[17]:
 
 
-target.value_counts().nlargest(n=10)
+target.value_counts().nlargest(n=60)
 
 
 # In[18]:
@@ -594,8 +607,22 @@ print("Input Format:%s" % (columns))
 # In[49]:
 
 
+def encoding(inpArray):
+    newInputDf = pd.DataFrame(inpArray , columns =columns) 
+    input_encoded =newInputDf.apply(lambda x: d[x.name].transform(x))
+    return input_encoded
+def inverse_encoding(inpArray):
+    newInputDf = pd.DataFrame(inpArray , columns =columns) 
+    input_reversed =newInputDf.apply(lambda x: d[x.name].inverse_transform(x))
+    return input_reversed
+
+
+# In[53]:
+
+
 import json
 
+features_reverse_encoding = inverse_encoding(all_features.tolist())
 def features_uniques(features) :
     features_uniques={}
     for key, value in features.iteritems(): 
@@ -606,18 +633,17 @@ def save_dict_json(data,filename) :
     with open(filename, 'w',encoding='utf8') as fp:
         json.dump(data, fp, indent=4, sort_keys=True,ensure_ascii=False)
 
-input_options = features_uniques(features)
+input_options = features_uniques(features_reverse_encoding)
 save_dict_json(input_options,"input_options.json")
 input_options
 
 
-# In[50]:
+# In[51]:
 
 
 def predict_resolution(inputList,model):
     newInput = [ inputList ]
-    newInputDf = pd.DataFrame(newInput , columns =columns) 
-    input_encoded =newInputDf.apply(lambda x: d[x.name].transform(x))
+    input_encoded = encoding(newInput)
     input_encoded = input_encoded.values.tolist()
 
     model.fit(training_inputs, training_classes)
@@ -629,7 +655,7 @@ def predict_resolution(inputList,model):
     return ynew[0],probability
 
 
-# In[51]:
+# In[52]:
 
 
 # prediction input
