@@ -171,7 +171,6 @@ target.value_counts().nlargest(n=10)
 from sklearn import preprocessing
 from collections import defaultdict
 d = defaultdict(preprocessing.LabelEncoder)
-
 # Encoding the variable
 features_encoded = features.apply(lambda x: d[x.name].fit_transform(x))
 
@@ -323,7 +322,7 @@ np.set_printoptions(precision=3)
 all_features = fit.transform(all_features)
 print(all_features.shape)
     
-
+"""
 # to test later diferent numbers of features
 i=5
 features_list=[]
@@ -337,6 +336,9 @@ while i<=8:
     features_list.append(fit.transform(all_features_before))
     i+=1
 
+    
+"""
+
 
 # ## Training and Validation
 
@@ -345,6 +347,7 @@ while i<=8:
 # In[30]:
 
 
+"""
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import cross_val_score
 
@@ -360,17 +363,21 @@ for ft in features_list:
     print("\n\nNum of features = "+str(i))
     print('Accuracy', cv_scores.mean(),"\n\n")
     i+=1
+"""
 
 
 # ### Split train and test data
 
-# In[31]:
+# In[50]:
 
 
 import numpy
 from sklearn.model_selection import train_test_split
-(training_inputs,testing_inputs,training_classes, testing_classes) = train_test_split(all_features, target, train_size=0.75, random_state=1)
 
+(training_inputs,testing_inputs,training_classes, testing_classes) = train_test_split(all_features, target, train_size=0.75, random_state=1)
+num_classes = len(target.unique())
+
+print('Num classes: ',num_classes)
 print('training_input.shape: ', training_inputs.shape)
 print('training_output.shape: ', training_classes.shape)
 print('testing_input.shape: ', testing_inputs.shape)
@@ -379,7 +386,7 @@ print('testing_output.shape: ', testing_classes.shape)
 
 # ### Target Distribution
 
-# In[32]:
+# In[ ]:
 
 
 unique, counts = np.unique(training_classes, return_counts=True)
@@ -394,7 +401,7 @@ plt.ylabel('Frequency')
 plt.show()
 
 
-# In[33]:
+# In[ ]:
 
 
 total_training = len(training_classes)
@@ -416,7 +423,7 @@ plt.show()
 
 # ### Decision Tree
 
-# In[34]:
+# In[ ]:
 
 
 from sklearn.tree import DecisionTreeClassifier
@@ -425,7 +432,7 @@ dt= DecisionTreeClassifier(random_state=1)
 dt.fit(training_inputs, training_classes)
 
 
-# In[35]:
+# In[ ]:
 
 
 from IPython.display import Image  
@@ -440,7 +447,7 @@ graph = graph_from_dot_data(dot_data.getvalue())
 Image(graph.create_png())
 
 
-# In[36]:
+# In[63]:
 
 
 all_scores=[]
@@ -452,7 +459,7 @@ score
 
 # ### Random Forest
 
-# In[37]:
+# In[ ]:
 
 
 from sklearn.ensemble import RandomForestClassifier
@@ -467,7 +474,7 @@ score
 
 # ### SVM
 
-# In[38]:
+# In[ ]:
 
 
 
@@ -483,7 +490,7 @@ score
 
 # ### KNN
 
-# In[39]:
+# In[ ]:
 
 
 from sklearn import neighbors
@@ -505,7 +512,7 @@ all_scores.append(best_score)
 
 # ### Naive Bayes
 
-# In[40]:
+# In[ ]:
 
 
 from sklearn.naive_bayes import MultinomialNB
@@ -518,7 +525,7 @@ score
 
 # ### Logistic Regression
 
-# In[41]:
+# In[ ]:
 
 
 from sklearn.linear_model import LogisticRegression
@@ -532,7 +539,7 @@ score
 
 # ### SGD
 
-# In[42]:
+# In[ ]:
 
 
 from sklearn.linear_model import SGDClassifier
@@ -546,15 +553,52 @@ score
 
 # ### Neural network
 
-# In[43]:
+# In[45]:
 
 
-# todo
+from keras.utils import to_categorical
+training_classes_cat = to_categorical(training_classes)
+testing_classes_cat = to_categorical(testing_classes)
+training_classes_cat.shape
+
+
+# In[64]:
+
+
+from keras.wrappers.scikit_learn import KerasClassifier
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import Dropout
+def create_model(n_hidden,size_nodo,ativ,opt,dropout):
+        model = Sequential()
+        model.add(Dense(size_nodo, input_dim=k, activation=ativ))
+        n=0
+        for n in range(n_hidden) :
+             model.add(Dropout(dropout))
+             model.add(Dense(size_nodo, activation=ativ))
+        model.add(Dense(num_classes, activation='softmax'))
+        # Compile model
+        model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+        return model
+# create estimator 
+estimator = KerasClassifier(build_fn=create_model,
+                            n_hidden=5,
+                            size_nodo=12,
+                            ativ="relu",
+                            opt="adam",
+                            dropout=0.1,
+                            epochs=200,
+                            batch_size=500,
+                            verbose=1)
+estimator.fit(training_inputs, training_classes_cat, validation_split=0.2, verbose=1)
+score = estimator.score(testing_inputs,testing_classes_cat)
+all_scores.append(score)
+score
 
 
 # ###  Overview  of all models
 
-# In[44]:
+# In[ ]:
 
 
 print(all_scores)
@@ -565,7 +609,7 @@ print("Average of all models:",sum(all_scores)/len(all_scores))
 
 # ## Hyperparameters Optimization
 
-# In[45]:
+# In[ ]:
 
 
 # todo
@@ -573,7 +617,7 @@ print("Average of all models:",sum(all_scores)/len(all_scores))
 
 # # Save model function
 
-# In[46]:
+# In[ ]:
 
 
 import pickle
@@ -583,7 +627,7 @@ def save_model(model,filename):
 
 # # Open model
 
-# In[47]:
+# In[ ]:
 
 
 def load_model(filename):
@@ -593,7 +637,7 @@ def load_model(filename):
 
 # # Prediction
 
-# In[48]:
+# In[ ]:
 
 
 columns_all = features.columns.tolist()
@@ -604,7 +648,7 @@ for i in cols :
 print("Input Format:%s" % (columns))
 
 
-# In[49]:
+# In[ ]:
 
 
 def encoding(inpArray):
@@ -617,7 +661,7 @@ def inverse_encoding(inpArray):
     return input_reversed
 
 
-# In[53]:
+# In[ ]:
 
 
 import json
@@ -638,7 +682,7 @@ save_dict_json(input_options,"input_options.json")
 input_options
 
 
-# In[51]:
+# In[ ]:
 
 
 def predict_resolution(inputList,model):
@@ -655,7 +699,7 @@ def predict_resolution(inputList,model):
     return ynew[0],probability
 
 
-# In[52]:
+# In[ ]:
 
 
 # prediction input
