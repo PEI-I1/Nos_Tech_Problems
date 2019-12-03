@@ -170,6 +170,9 @@ target.value_counts().nlargest(n=10)
 
 from sklearn import preprocessing
 from collections import defaultdict
+
+#features_test = features[features.columns.difference(['Tipificacao_Nivel_2','Tipificacao_Nivel_1'])]
+
 d = defaultdict(preprocessing.LabelEncoder)
 # Encoding the variable
 features_encoded = features.apply(lambda x: d[x.name].fit_transform(x))
@@ -177,7 +180,7 @@ features_encoded = features.apply(lambda x: d[x.name].fit_transform(x))
 print(features_encoded.head())
 
 
-# ### More Target Balancing -> Todo
+# ### Target Balancing
 
 # In[15]:
 
@@ -321,30 +324,41 @@ features_scores(fit.scores_)
 np.set_printoptions(precision=3)
 all_features = fit.transform(all_features)
 print(all_features.shape)
-    
-"""
-# to test later diferent numbers of features
-i=5
-features_list=[]
-while i<=8:
-    print("Num Features:",i)
-    n=i
-    test = SelectKBest(score_func = mutual_info_classif, k = n)
-    fit = test.fit(all_features_before, target)
-    # Sumarize Scores
-    np.set_printoptions(precision=3)
-    features_list.append(fit.transform(all_features_before))
-    i+=1
 
+
+# ### Feature correlation
+
+# In[30]:
+
+
+import seaborn as sns
+
+columns_all = features.columns.tolist()
+columns = []
+for i in cols :
+    columns.append(columns_all[i])
+    i+=1
     
-"""
+fts = pd.DataFrame(data=all_features, 
+                   columns=columns) 
+def histogram_intersection(a, b):
+    v = np.minimum(a, b).sum().round(decimals=1)
+    return v
+fts.corr(method=histogram_intersection)
+# calculate the correlation matrix
+corr = fts.corr()
+
+# plot the heatmap
+sns.heatmap(corr, 
+        xticklabels=corr.columns,
+        yticklabels=corr.columns)
 
 
 # ## Training and Validation
 
 # ### Number of features testing with Decision Tree
 
-# In[30]:
+# In[31]:
 
 
 """
@@ -368,13 +382,17 @@ for ft in features_list:
 
 # ### Split train and test data
 
-# In[50]:
+# In[32]:
 
 
 import numpy
 from sklearn.model_selection import train_test_split
 
-(training_inputs,testing_inputs,training_classes, testing_classes) = train_test_split(all_features, target, train_size=0.75, random_state=1)
+d_target = defaultdict(preprocessing.LabelEncoder)
+# Encoding the variable
+target_encoded =  d_target['target'].fit_transform(target)
+
+(training_inputs,testing_inputs,training_classes, testing_classes) = train_test_split(all_features, target_encoded , train_size=0.75, random_state=1)
 num_classes = len(target.unique())
 
 print('Num classes: ',num_classes)
@@ -386,7 +404,7 @@ print('testing_output.shape: ', testing_classes.shape)
 
 # ### Target Distribution
 
-# In[ ]:
+# In[33]:
 
 
 unique, counts = np.unique(training_classes, return_counts=True)
@@ -401,7 +419,7 @@ plt.ylabel('Frequency')
 plt.show()
 
 
-# In[ ]:
+# In[34]:
 
 
 total_training = len(training_classes)
@@ -423,7 +441,7 @@ plt.show()
 
 # ### Decision Tree
 
-# In[ ]:
+# In[35]:
 
 
 from sklearn.tree import DecisionTreeClassifier
@@ -432,7 +450,7 @@ dt= DecisionTreeClassifier(random_state=1)
 dt.fit(training_inputs, training_classes)
 
 
-# In[ ]:
+# In[36]:
 
 
 from IPython.display import Image  
@@ -447,7 +465,7 @@ graph = graph_from_dot_data(dot_data.getvalue())
 Image(graph.create_png())
 
 
-# In[63]:
+# In[37]:
 
 
 all_scores=[]
@@ -459,7 +477,7 @@ score
 
 # ### Random Forest
 
-# In[ ]:
+# In[38]:
 
 
 from sklearn.ensemble import RandomForestClassifier
@@ -474,10 +492,10 @@ score
 
 # ### SVM
 
-# In[ ]:
+# In[39]:
 
 
-
+"""
 from sklearn import svm
 
 C = 1.0
@@ -486,11 +504,12 @@ svc.fit(training_inputs, training_classes)
 score = svc.score(testing_inputs, testing_classes)
 all_scores.append(score)
 score
+"""
 
 
 # ### KNN
 
-# In[ ]:
+# In[40]:
 
 
 from sklearn import neighbors
@@ -512,7 +531,7 @@ all_scores.append(best_score)
 
 # ### Naive Bayes
 
-# In[ ]:
+# In[41]:
 
 
 from sklearn.naive_bayes import MultinomialNB
@@ -525,7 +544,7 @@ score
 
 # ### Logistic Regression
 
-# In[ ]:
+# In[42]:
 
 
 from sklearn.linear_model import LogisticRegression
@@ -539,7 +558,7 @@ score
 
 # ### SGD
 
-# In[ ]:
+# In[43]:
 
 
 from sklearn.linear_model import SGDClassifier
@@ -553,16 +572,18 @@ score
 
 # ### Neural network
 
-# In[45]:
+# In[44]:
 
 
 from keras.utils import to_categorical
+
+
 training_classes_cat = to_categorical(training_classes)
 testing_classes_cat = to_categorical(testing_classes)
 training_classes_cat.shape
 
 
-# In[64]:
+# In[45]:
 
 
 from keras.wrappers.scikit_learn import KerasClassifier
@@ -598,18 +619,31 @@ score
 
 # ###  Overview  of all models
 
-# In[ ]:
+# In[46]:
 
 
 print(all_scores)
 print("Average of all models:",sum(all_scores)/len(all_scores))
-# Last best = 0.67
-# Last avg = 0.57
+
+# Last best = 0.73
+# Last avg = 0.56
+
+# tip1
+# best = 0.51
+# avg = 0.40
+
+# tip2
+# best = 0.57
+# avg = 0.41
+
+# tip3
+# best = 0.69
+# avg = 0.49
 
 
 # ## Hyperparameters Optimization
 
-# In[ ]:
+# In[47]:
 
 
 # todo
@@ -617,7 +651,7 @@ print("Average of all models:",sum(all_scores)/len(all_scores))
 
 # # Save model function
 
-# In[ ]:
+# In[48]:
 
 
 import pickle
@@ -627,7 +661,7 @@ def save_model(model,filename):
 
 # # Open model
 
-# In[ ]:
+# In[49]:
 
 
 def load_model(filename):
@@ -637,18 +671,13 @@ def load_model(filename):
 
 # # Prediction
 
-# In[ ]:
+# In[50]:
 
 
-columns_all = features.columns.tolist()
-columns = []
-for i in cols :
-    columns.append(columns_all[i])
-    i+=1
 print("Input Format:%s" % (columns))
 
 
-# In[ ]:
+# In[56]:
 
 
 def encoding(inpArray):
@@ -659,12 +688,18 @@ def inverse_encoding(inpArray):
     newInputDf = pd.DataFrame(inpArray , columns =columns) 
     input_reversed =newInputDf.apply(lambda x: d[x.name].inverse_transform(x))
     return input_reversed
+def target_decoded(target):
+    target_decoded =  d_target['target'].inverse_transform(target)
+    return target_decoded
 
 
-# In[ ]:
+# ## Features options
+
+# In[52]:
 
 
 import json
+import yaml
 
 features_reverse_encoding = inverse_encoding(all_features.tolist())
 def features_uniques(features) :
@@ -681,8 +716,96 @@ input_options = features_uniques(features_reverse_encoding)
 save_dict_json(input_options,"input_options.json")
 input_options
 
+            
 
-# In[ ]:
+
+# ## Trying to find relations between features
+
+# In[53]:
+
+
+features_reverse_encoding = inverse_encoding(all_features.tolist())
+
+# versao 1
+grouped_servico = features_reverse_encoding.groupby(['Servico'])
+features_connections = {}
+for servico, group_servico in grouped_servico:
+  #  servico_unique = features_uniques(group_servico)
+    grouped_sintoma = group_servico.groupby(['Sintoma'])
+    
+    sintoma_tips = {}
+    for sintoma , group_sintoma in grouped_sintoma :
+        tipificacoes = group_sintoma[['Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3']]
+        grouped_tip1 = tipificacoes.groupby(['Tipificacao_Nivel_1'])
+        tip1 = {}
+        for tipificacao1 , group_tip1 in grouped_tip1 :
+            group_tip1 = group_tip1[group_tip1.columns.difference(['Tipificacao_Nivel_1'])]
+            grouped_tip2 = group_tip1.groupby(['Tipificacao_Nivel_2'])
+            tip2 = {}
+            for tipificacao2 , group_tip2 in grouped_tip2 :
+                group_tip2 = group_tip2[group_tip2.columns.difference(['Tipificacao_Nivel_2'])]
+                tip2.update({ tipificacao2 : features_uniques(group_tip2) })
+            tip1.update({ tipificacao1 :  { 'Tipificacao_Nivel_2' : tip2 }  })
+        tip = {'Tipificacao_Nivel_1' : tip1}
+        sintoma_tips[sintoma] =  tip
+    group_servico = group_servico[group_servico.columns.difference(['Servico','Sintoma','Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3'])]
+    group_servico = features_uniques(group_servico)
+    group_servico['Sintoma'] = sintoma_tips
+    features_connections[servico] = group_servico 
+input_options_related = {'Servico' : features_connections }
+save_dict_json(input_options_related,"input_options_related_v1.json")
+
+# versao 2
+grouped_servico = features_reverse_encoding.groupby(['Servico'])
+features_connections = {}
+for servico, group_servico in grouped_servico:
+  #  servico_unique = features_uniques(group_servico)
+    grouped_sintoma = group_servico.groupby(['Sintoma'])
+    group_servico = group_servico[group_servico.columns.difference(['Servico'])]
+    group_servico = features_uniques(group_servico)
+    features_connections[servico] = group_servico 
+input_options_related = {'Servico' : features_connections }
+save_dict_json(input_options_related,"input_options_related_v2.json")
+
+# versao 3
+
+tipificacoes = features_reverse_encoding[['Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3']]
+grouped_tip1 = tipificacoes.groupby(['Tipificacao_Nivel_1'])
+tip1 = {}
+for tipificacao1 , group_tip1 in grouped_tip1 :
+    group_tip1 = group_tip1[group_tip1.columns.difference(['Tipificacao_Nivel_1'])]
+    grouped_tip2 = group_tip1.groupby(['Tipificacao_Nivel_2'])
+    tip2 = {}
+    for tipificacao2 , group_tip2 in grouped_tip2 :
+        group_tip2 = group_tip2[group_tip2.columns.difference(['Tipificacao_Nivel_2'])]
+        tip2.update({ tipificacao2 : features_uniques(group_tip2) })
+    tip1.update({ tipificacao1 :  { 'Tipificacao_Nivel_2' : tip2 }  })
+
+versao3 = features_reverse_encoding[features_reverse_encoding.columns.difference(['Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3'])]
+versao3 = features_uniques(versao3)
+versao3['Tipificacao_Nivel_1'] = tip1
+save_dict_json(versao3,"input_options_related_v3.json")
+
+# versao 4
+tipificacoes = features_reverse_encoding[['Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3']]
+grouped_tip3 = tipificacoes.groupby(['Tipificacao_Nivel_3'])
+tip3 = {}
+for tipificacao3 , group_tip3 in grouped_tip3 :
+    group_tip3 = group_tip3[group_tip3.columns.difference(['Tipificacao_Nivel_3'])]
+    grouped_tip2 = group_tip3.groupby(['Tipificacao_Nivel_2'])
+    tip2 = {}
+    for tipificacao2 , group_tip2 in grouped_tip2 :
+        group_tip2 = group_tip2[group_tip2.columns.difference(['Tipificacao_Nivel_2'])]
+        tip2.update({ tipificacao2 : features_uniques(group_tip2) })
+    tip3.update({ tipificacao3 :  { 'Tipificacao_Nivel_2' : tip2 }  })
+
+versao4 = features_reverse_encoding[features_reverse_encoding.columns.difference(['Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3'])]
+versao4 = features_uniques(versao4)
+versao4['Tipificacao_Nivel_3'] = tip3
+save_dict_json(versao4,"input_options_related_v4.json")
+
+
+# In[54]:
 
 
 def predict_resolution(inputList,model):
@@ -693,13 +816,12 @@ def predict_resolution(inputList,model):
     model.fit(training_inputs, training_classes)
     score = model.score(testing_inputs, testing_classes)
     
-    # make a prediction
     ynew = model.predict(input_encoded)
     probability = np.amax(model.predict_proba(input_encoded)) * 100
-    return ynew[0],probability
+    return target_decoded(ynew)[0],probability
 
 
-# In[ ]:
+# In[55]:
 
 
 # prediction input
