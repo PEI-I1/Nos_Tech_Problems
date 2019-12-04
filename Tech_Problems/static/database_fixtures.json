@@ -1,0 +1,25 @@
+[
+    {
+        "model": "technical_problems.Equipamento_Tipo",
+        "pk": 0,
+        "fields": {
+            "name": "BOX 1.0 HD (CABO)"
+        }
+    },
+    {
+        "model": "technical_problems.Tarifario",
+        "pk": 0,
+        "fields": {
+            "name": "6 Canais CABO"
+        }
+    },
+    {
+        "model": "technical_problems.Client",
+        "fields": {
+            "username": "933333333",
+            "password": "111111111",
+            "equipamento_tipo": 0,
+            "tarifario": 0
+        }
+    }
+]
