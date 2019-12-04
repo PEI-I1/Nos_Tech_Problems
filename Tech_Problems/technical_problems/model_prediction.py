@@ -8,8 +8,8 @@ def load_dict(filename) :
     label_encoder = joblib.load(filename)
     return label_encoder
 
-d = load_dict(os.getcwd() + '/technical_problems/features_dict')
-d_target = load_dict(os.getcwd() + '/technical_problems/target_dict')
+d = load_dict(os.getcwd() + '/technical_problems/model_files/features_dict')
+d_target = load_dict(os.getcwd() + '/technical_problems/model_files/target_dict')
 columns = ['Equipamento_Tipo', 'Servico', 'Sintoma', 'Tarifario', 'Tipificacao_Nivel_1', 'Tipificacao_Nivel_2', 'Tipificacao_Nivel_3']
 
 def load_model(filename):
