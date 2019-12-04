@@ -3,8 +3,10 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate
 from django.http import HttpResponse
 import json
+import os
+from .model_prediction import load_model, predict_resolution, load_dict
 
-#model = load_model("model")
+model = load_model(os.getcwd() + '/technical_problems/model')
 
 def authenticate(request):
     '''
@@ -48,7 +50,7 @@ def solve(request):
             tipificacao_tipo_3,
         ]
         
-        prediction,probability = 'Desliga e volta a ligar', 0.56 #predict_resolution(input,model)
+        prediction,probability = predict_resolution(input,model) #'Desliga e volta a ligar', 0.56 
 
         response_as_json = json.dumps({'prediction': prediction, 'probability': probability, 'equipamento': equipamento, 'tarifario': tarifario})
     
