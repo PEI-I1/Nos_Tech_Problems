@@ -118,3 +118,4 @@ celerybeat-schedule.db
 # NOS technical problems input options
 **/input_options.json
 **/input_options_old.json
+**/model_files/

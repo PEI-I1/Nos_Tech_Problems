@@ -5,6 +5,4 @@ numpy
 sklearn
 seaborn
 keras
-pickle
-yaml
 joblib
