@@ -17,6 +17,3 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_AGE = 3600 # seconds
