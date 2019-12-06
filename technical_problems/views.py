@@ -6,8 +6,48 @@ import json
 import os
 from .model_prediction import load_model, predict_resolution, load_dict
 from .sentence_similarity_features import getProblem
+from django.db import IntegrityError
 
 model = load_model(os.getcwd() + '/technical_problems/model_files/model')
+
+def register(request):
+    username = request.GET.get('username', '')
+    password = request.GET.get('password', '')
+    equipamento_tipo = request.GET.get('equipamento_tipo', '')
+    tarifario = request.GET.get('tarifario', '')
+    if username and password:
+        equipamento_tipo_object = Equipamento_Tipo.objects.all().filter(name = equipamento_tipo)
+        if len(equipamento_tipo_object) == 0:
+            response_as_json = json.dumps({'error': '\'equipamento_tipo\' value is invalid'})
+        else:
+            equipamento_tipo_object = equipamento_tipo_object[0]
+        
+            tarifario_object = Tarifario.objects.all().filter(name = tarifario)
+            if len(tarifario_object) == 0:
+                response_as_json = json.dumps({'error': '\'tarifario\' value is invalid'})
+            else:
+                tarifario_object = tarifario_object[0]
+
+                user_entry = User(
+                    username = username,
+                    password = password
+                )
+                try:
+                    user_entry.save()
+                    client_entry = Client(
+                        user = user_entry,
+                        equipamento_tipo = equipamento_tipo_object,
+                        tarifario = tarifario_object
+                    )
+                    client_entry.save()
+                    response_as_json = json.dumps({'success': 'User has been registered'})
+                except IntegrityError:
+                    response_as_json = json.dumps({'error': 'User already exists'})
+                    
+    else:
+        response_as_json = json.dumps({'error': 'Bad parameters'})
+    return HttpResponse(response_as_json, content_type='json')
+
 
 def authenticate(request):
     '''
@@ -37,7 +77,7 @@ def solve(request):
         if servico in ['TV', 'Internet', 'Voz']:
 
             clients = Client.objects \
-                        .filter(username=phone_number, password=nif) \
+                        .filter(user__username=phone_number, user__password=nif) \
                         .values_list('equipamento_tipo__name', 'tarifario__name')
 
             if clients:

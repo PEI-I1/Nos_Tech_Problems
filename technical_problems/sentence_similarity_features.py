@@ -9,15 +9,14 @@ from .keywords import keywords
 import os
 
 
-#embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder-multilingual-large/2")
+embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder-multilingual-large/2")
 
 def loadProblems(feature_name):
     with open(os.getcwd() + '/technical_problems/model_files/input_options.json') as json_file:
         data = json.load(json_file)
         feature_og = [x for x in data[feature_name]]
         feature = [x.lower() for x in feature_og]
-    return '', ''
-    #return embed(feature)["outputs"], feature_og
+    return embed(feature)["outputs"], feature_og
 
 
 result_sintoma, sintoma = loadProblems('Sintoma')
@@ -53,7 +52,7 @@ def getProblem(features):
             result_tipificacao = result_tipificacao_3
             tipificacao_tipo = tipificacao_tipo_3
         line_versions = replaceWithKeywords(line.lower(), data)
-        result_sentences =  []#[embed(line_version)["outputs"] for line_version in line_versions]
+        result_sentences =  [embed(line_version)["outputs"] for line_version in line_versions]
         similarity_matrices = [list(np.inner(result_sentence, result_tipificacao)[0]) for result_sentence in result_sentences]
         max_values = [max(similarity_matrice) for similarity_matrice in similarity_matrices]
         max_abs = max(max_values)
