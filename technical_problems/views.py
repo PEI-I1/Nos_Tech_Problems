@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.middleware.csrf import get_token
+from django.contrib.auth import authenticate, login, logout
 from django.conf import settings
 import json
 import os
@@ -11,10 +12,9 @@ from .model_prediction import load_model, predict_resolution, load_dict
 from .sentence_similarity_features import getProblem
 from django.db import IntegrityError
 
-MODEL = None
+model = load_model(os.getcwd() + '/technical_problems/model_files/model')
 
-
-def login(request):
+def log_in(request):
     """ Log a user(client) in the system
     """
     #TODO: move logic to dedicated controller
@@ -22,7 +22,6 @@ def login(request):
         uname = request.GET.get('username', '') # phone number
         pwd = request.GET.get('password', '')   # NIF
         if uname and pwd:
-            user = User.objects.get(username=uname)
             user = authenticate(request, username=uname, password=pwd)
             if user is not None:
                 login(request, user)
@@ -32,18 +31,18 @@ def login(request):
     except:
         return HttpResponse(status=400)
 
-def logout(request):
+def log_out(request):
     """ Log out a user(client) and clear session data
     """
     logout(request)
     return HttpResponse(status=200)
 
 def register(request):
-    username = request.GET.get('username', '')
-    password = request.GET.get('password', '')
+    uname = request.GET.get('username', '')
+    pwd = request.GET.get('password', '')
     equipamento_tipo = request.GET.get('equipamento_tipo', '')
     tarifario = request.GET.get('tarifario', '')
-    if username and password:
+    if uname and pwd:
         equipamento_tipo_object = Equipamento_Tipo.objects.all().filter(name = equipamento_tipo)
         if len(equipamento_tipo_object) == 0:
             response_as_json = json.dumps({'error': '\'equipamento_tipo\' value is invalid'})
@@ -56,12 +55,8 @@ def register(request):
             else:
                 tarifario_object = tarifario_object[0]
 
-                user_entry = User(
-                    username = username,
-                    password = password
-                )
                 try:
-                    user_entry.save()
+                    user_entry = User.objects.create_user(uname, '', pwd)
                     client_entry = Client(
                         user = user_entry,
                         equipamento_tipo = equipamento_tipo_object,
@@ -79,12 +74,9 @@ def register(request):
 # FIXME: uncomment in production
 #@login_required
 def solve(request):
-    if not(MODEL): #lazy load
-        MODEL = load_model(os.getcwd() + '/technical_problems/model_files/model')
-
     #TODO, check that user is authenticated
     if not request.user.is_authenticated:
-        return HttpResposne('User not logged in!', status=401)
+        return HttpResponse('User not logged in!', status=401)
     else:
         sintoma = request.GET.get('sintoma', '')
         tipificacao_tipo_1 = request.GET.get('tipificacao_tipo_1', '')
