@@ -14,10 +14,20 @@
         }
     },
     {
-        "model": "technical_problems.Client",
+        "model": "auth.User",
+        "pk": 0,
         "fields": {
             "username": "933333333",
             "password": "111111111",
+            "email": "teste@gmail.com",
+            "first_name": "Testing",
+            "last_name": "Name"
+        }
+    },
+    {
+        "model": "technical_problems.Client",
+        "fields": {
+            "user": 0,
             "equipamento_tipo": 0,
             "tarifario": 0
         }
