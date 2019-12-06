@@ -1,12 +1,12 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import User
 
 class Client(models.Model):
     """ NOS client
     """
-    # TODO, use AbstractUser
-    username = models.CharField(max_length=256)
-    password = models.CharField(max_length=256)
+    #username = models.CharField(max_length=256)
+    #password = models.CharField(max_length=256)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     equipamento_tipo = models.ForeignKey(
         'Equipamento_Tipo',
         on_delete=models.CASCADE
