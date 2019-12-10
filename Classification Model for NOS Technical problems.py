@@ -619,7 +619,7 @@ score
 
 # ###  Overview  of all models
 
-# In[46]:
+# In[57]:
 
 
 print(all_scores)
@@ -641,12 +641,50 @@ print("Average of all models:",sum(all_scores)/len(all_scores))
 # avg = 0.49
 
 
+# Best results on Decision Tree, Random Forest e KNN (>70%)
+# 
+# So lets try to work more on these ones!
+
 # ## Hyperparameters Optimization
 
-# In[47]:
+# ### Random Forest Optimization
+
+# In[69]:
 
 
-# todo
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import cross_val_score
+def rf_param_selection(X, y, nfolds):
+    n_estimators = [100,250,400]
+    max_depth = [8,12,14,None]
+    random_state = [1]
+    max_features = ['auto']
+    param_grid = {'n_estimators': n_estimators, 'max_depth' : max_depth, 'random_state' : random_state, 'max_features' : max_features}
+    grid_search = GridSearchCV(RandomForestClassifier(), param_grid, cv=nfolds, verbose=3, n_jobs=2)
+    grid_search.fit(X, y)
+    grid_search.best_params_
+    return grid_search.best_params_
+
+rf_hyper_parameters = rf_param_selection(all_features, target_encoded, 2)
+print('\n\n\nBest RF Hyper-parameters using GridSearch:\n', rf_hyper_parameters)
+
+n_estimators = rf_hyper_parameters['n_estimators']
+max_depth = rf_hyper_parameters['max_depth']
+random_state = rf_hyper_parameters['random_state']
+max_features = rf_hyper_parameters['max_features']
+
+clf = RandomForestClassifier(n_estimators=n_estimators, random_state=random_state, max_depth=max_depth, max_features=max_features)
+
+accuracy = cross_val_score(clf, all_features, target_encoded , cv=2,scoring='accuracy')
+print('Accuracy',accuracy.mean())
+
+
+# ### KNN Optimization
+
+# In[ ]:
+
+
+#todo
 
 
 # # Save model function
@@ -669,15 +707,37 @@ def load_model(filename):
     return model
 
 
-# # Prediction
+# # Save and Load encoding dict
 
 # In[50]:
 
 
+import joblib
+
+def save_dict(dict_encoder, filename) :
+    joblib.dump(dict_encoder,filename)
+
+def load_dict(filename) :    
+    label_encoder = joblib.load(filename)
+    return label_encoder
+
+save_dict(d,'features_dict.joblib')
+save_dict(d_target,'target_dict.joblib')
+
+d = load_dict('features_dict.joblib')
+d_target = load_dict('target_dict.joblib')
+
+
+# # Prediction
+
+# In[51]:
+
+
 print("Input Format:%s" % (columns))
+columns = ['Equipamento_Tipo', 'Servico', 'Sintoma', 'Tarifario', 'Tipificacao_Nivel_1', 'Tipificacao_Nivel_2', 'Tipificacao_Nivel_3']
 
 
-# In[56]:
+# In[52]:
 
 
 def encoding(inpArray):
@@ -695,7 +755,7 @@ def target_decoded(target):
 
 # ## Features options
 
-# In[52]:
+# In[53]:
 
 
 import json
@@ -721,7 +781,7 @@ input_options
 
 # ## Trying to find relations between features
 
-# In[53]:
+# In[54]:
 
 
 features_reverse_encoding = inverse_encoding(all_features.tolist())
@@ -805,23 +865,20 @@ versao4['Tipificacao_Nivel_3'] = tip3
 save_dict_json(versao4,"input_options_related_v4.json")
 
 
-# In[54]:
+# In[55]:
 
 
 def predict_resolution(inputList,model):
     newInput = [ inputList ]
     input_encoded = encoding(newInput)
     input_encoded = input_encoded.values.tolist()
-
-    model.fit(training_inputs, training_classes)
-    score = model.score(testing_inputs, testing_classes)
     
     ynew = model.predict(input_encoded)
     probability = np.amax(model.predict_proba(input_encoded)) * 100
     return target_decoded(ynew)[0],probability
 
 
-# In[55]:
+# In[56]:
 
 
 # prediction input
