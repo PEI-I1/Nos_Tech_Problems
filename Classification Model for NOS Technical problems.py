@@ -619,7 +619,7 @@ score
 
 # ###  Overview  of all models
 
-# In[57]:
+# In[46]:
 
 
 print(all_scores)
@@ -641,31 +641,37 @@ print("Average of all models:",sum(all_scores)/len(all_scores))
 # avg = 0.49
 
 
-# Best results on Decision Tree, Random Forest e KNN (>70%)
+# Best results on Decision Tree, Random Forest e KNN (>70%) for now.
 # 
-# So lets try to work more on these ones!
+# Lets try to find better results with Hyperparameters Optimization.
 
 # ## Hyperparameters Optimization
 
-# ### Random Forest Optimization
-
-# In[69]:
+# In[47]:
 
 
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
-def rf_param_selection(X, y, nfolds):
-    n_estimators = [100,250,400]
-    max_depth = [8,12,14,None]
-    random_state = [1]
-    max_features = ['auto']
-    param_grid = {'n_estimators': n_estimators, 'max_depth' : max_depth, 'random_state' : random_state, 'max_features' : max_features}
-    grid_search = GridSearchCV(RandomForestClassifier(), param_grid, cv=nfolds, verbose=3, n_jobs=2)
+
+def grid_search(X, y, nfolds,param_grid,model):
+    grid_search = GridSearchCV(model, param_grid, cv=nfolds, verbose=3, n_jobs=2)
     grid_search.fit(X, y)
     grid_search.best_params_
     return grid_search.best_params_
 
-rf_hyper_parameters = rf_param_selection(all_features, target_encoded, 2)
+
+# ### Random Forest Optimization
+
+# In[48]:
+
+
+n_estimators = [100,250,400]
+max_depth = [8,12,14,None]
+random_state = [1]
+max_features = ['auto']
+param_grid = {'n_estimators': n_estimators, 'max_depth' : max_depth, 'random_state' : random_state, 'max_features' : max_features}
+
+rf_hyper_parameters = grid_search(all_features, target_encoded, 2 ,  param_grid, RandomForestClassifier())
 print('\n\n\nBest RF Hyper-parameters using GridSearch:\n', rf_hyper_parameters)
 
 n_estimators = rf_hyper_parameters['n_estimators']
@@ -673,23 +679,97 @@ max_depth = rf_hyper_parameters['max_depth']
 random_state = rf_hyper_parameters['random_state']
 max_features = rf_hyper_parameters['max_features']
 
-clf = RandomForestClassifier(n_estimators=n_estimators, random_state=random_state, max_depth=max_depth, max_features=max_features)
+rf = RandomForestClassifier(n_estimators=n_estimators, random_state=random_state, max_depth=max_depth, max_features=max_features)
 
-accuracy = cross_val_score(clf, all_features, target_encoded , cv=2,scoring='accuracy')
-print('Accuracy',accuracy.mean())
-
-
-# ### KNN Optimization
-
-# In[ ]:
+rf.fit(training_inputs, training_classes)
+score = rf.score(testing_inputs, testing_classes)
+print('Accuracy',score)
 
 
-#todo
+# ### Logistic Regression Optimization
+
+# In[49]:
+
+
+param_grid={
+        "C":np.logspace(-3,3,5), 
+        "penalty":["l1","l2"]
+}
+lr_hyper_parameters = grid_search(all_features, target_encoded, 2 ,param_grid ,LogisticRegression())
+print('\n\n\nBest Logistic Regression Hyper-parameters using GridSearch:\n', lr_hyper_parameters)
+
+C = lr_hyper_parameters['C']
+penalty = lr_hyper_parameters['penalty']
+
+lr = LogisticRegression(C=C,penalty=penalty)
+
+lr.fit(training_inputs, training_classes)
+score = lr.score(testing_inputs, testing_classes)
+print('Accuracy',score)
+
+
+# ### SGD Optimization
+
+# In[50]:
+
+
+params = {
+    "loss" : ["hinge", "log", "squared_hinge", "modified_huber"],
+    "alpha" : [0.0001, 0.001, 0.01, 0.1],
+    "penalty" : ["l2", "l1", "none"],
+}
+
+sgd_hyper_parameters = grid_search(all_features, target_encoded, 2 , params , SGDClassifier())
+print('\n\n\nBest SGD Hyper-parameters using GridSearch:\n', sgd_hyper_parameters)
+
+loss = sgd_hyper_parameters['loss']
+alpha = sgd_hyper_parameters['alpha']
+penalty = sgd_hyper_parameters['penalty']
+
+sgd = SGDClassifier(loss=loss,alpha=alpha,penalty=penalty)
+
+sgd.fit(training_inputs, training_classes)
+score = sgd.score(testing_inputs, testing_classes)
+print('Accuracy',score)
+
+
+# ### Neural network Optimization
+
+# In[51]:
+
+
+grid_param = {  
+    'n_hidden': [5,10,20],
+    'size_nodo': [50,110,200],
+    'ativ':['relu','softmax'] ,
+    'opt': ['rmsprop','adam'],
+    'dropout' : [0.1,0.4],
+    'epochs' : [200],
+    'batch_size' : [500]
+    
+}
+model = KerasClassifier(build_fn=create_model)
+ann_hyper_parameters = grid_search(all_features, target_encoded, 2 ,  grid_param, model)
+print('\n\n\nBest Neural Network Hyper-parameters using GridSearch:\n', ann_hyper_parameters)
+
+
+estimator = KerasClassifier(build_fn=create_model,
+                            n_hidden=ann_hyper_parameters['n_hidden'],
+                            size_nodo=ann_hyper_parameters['size_nodo'],
+                            ativ=ann_hyper_parameters['ativ'],
+                            opt=ann_hyper_parameters['opt'],
+                            dropout=ann_hyper_parameters['dropout'],
+                            epochs=ann_hyper_parameters['epochs'],
+                            batch_size=ann_hyper_parameters['batch_size'],
+                            verbose=1)
+estimator.fit(training_inputs, training_classes_cat, validation_split=0.2, verbose=1)
+score = estimator.score(testing_inputs,testing_classes_cat)
+print('Accuracy',score)
 
 
 # # Save model function
 
-# In[48]:
+# In[ ]:
 
 
 import pickle
@@ -699,7 +779,7 @@ def save_model(model,filename):
 
 # # Open model
 
-# In[49]:
+# In[ ]:
 
 
 def load_model(filename):
@@ -709,7 +789,7 @@ def load_model(filename):
 
 # # Save and Load encoding dict
 
-# In[50]:
+# In[ ]:
 
 
 import joblib
@@ -730,14 +810,14 @@ d_target = load_dict('target_dict.joblib')
 
 # # Prediction
 
-# In[51]:
+# In[ ]:
 
 
 print("Input Format:%s" % (columns))
 columns = ['Equipamento_Tipo', 'Servico', 'Sintoma', 'Tarifario', 'Tipificacao_Nivel_1', 'Tipificacao_Nivel_2', 'Tipificacao_Nivel_3']
 
 
-# In[52]:
+# In[ ]:
 
 
 def encoding(inpArray):
@@ -755,7 +835,7 @@ def target_decoded(target):
 
 # ## Features options
 
-# In[53]:
+# In[ ]:
 
 
 import json
@@ -781,7 +861,7 @@ input_options
 
 # ## Trying to find relations between features
 
-# In[54]:
+# In[ ]:
 
 
 features_reverse_encoding = inverse_encoding(all_features.tolist())
@@ -865,7 +945,7 @@ versao4['Tipificacao_Nivel_3'] = tip3
 save_dict_json(versao4,"input_options_related_v4.json")
 
 
-# In[55]:
+# In[ ]:
 
 
 def predict_resolution(inputList,model):
@@ -878,7 +958,7 @@ def predict_resolution(inputList,model):
     return target_decoded(ynew)[0],probability
 
 
-# In[56]:
+# In[ ]:
 
 
 # prediction input
