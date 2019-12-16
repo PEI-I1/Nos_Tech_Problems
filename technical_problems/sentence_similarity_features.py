@@ -64,8 +64,8 @@ def getProblem(features):
     threads = []
     
     threads.append(Thread(target=getFeatureSuggestion, args=(features[0], data, result_sintoma, sintoma, response, 0)))
-    for i in range(1,4):
-        threads.append(Thread(target=getFeatureSuggestion, args=(features[i], data, emb_og_typifications[i][0], emb_og_typifications[i][1], response, i)))
+    for i in range(0,3):
+        threads.append(Thread(target=getFeatureSuggestion, args=(features[i], data, emb_og_typifications[i][0], emb_og_typifications[i][1], response, i+1)))
 
     for thread in threads:
         thread.start()

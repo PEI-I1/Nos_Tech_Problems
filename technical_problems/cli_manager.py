@@ -68,7 +68,7 @@ def get_cli_info(uname):
     client_info = []
     clients = Client.objects \
                     .filter(user__username=uname) \
-                    .values_list('equipamento_tipo__name', 'tarifario__name')
+                    .values_list('devices__name', 'tariffs__name')
     if clients:
         client = clients[0]
         client_info.append(client[0])

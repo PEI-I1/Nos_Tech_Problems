@@ -47,25 +47,26 @@ def register(request):
 #@login_required
 def solve(request):
     sintoma = request.GET.get('sintoma', '')
-    tipificacao_tipo_1 = request.GET.get('tipificacao_tipo_1', '')
-    tipificacao_tipo_2 = request.GET.get('tipificacao_tipo_2', '')
-    tipificacao_tipo_3 = request.GET.get('tipificacao_tipo_3', '')
+    tip_1 = request.GET.get('tipificacao_tipo_1', '')
+    tip_2 = request.GET.get('tipificacao_tipo_2', '')
+    tip_3 = request.GET.get('tipificacao_tipo_3', '')
     servico = request.GET.get('servico', '')
-    uname = request.user.getUsername()
+    uname = '933333333'
+    # uname = request.user.getUsername()
     
-    cli_info = get_cli_info(uname)
+    cli_info = cm.get_cli_info(uname)
     
     if len(cli_info) > 0:
-        if sintoma and tip_1 and tip_2 and tip_3 and serv:
-            services_hr = [service[1] for service in models.ServiceType.AVAILABLE_SERVICES]
-            if serv in services_hr:
+        if sintoma and tip_1 and tip_2 and tip_3 and servico:
+            services_hr = [service[1] for service in ServiceType.AVAILABLE_SERVICES]
+            if servico in services_hr:
                 sint, tip_1, tip_2 , tip_3 = getProblem([sintoma, tip_1, tip_2, tip_3])
                 
                 input = [
-                    equipamento,
+                    cli_info[0], # Equipamento
                     servico,
                     sint[0], # Sintoma
-                    tarifario,
+                    cli_info[1], # Tarifario
                     tip_1[0], # Tipificação Nivel 1
                     tip_2[0], # Tipificação Nivel 2
                     tip_3[0], # Tipificação Nivel 3

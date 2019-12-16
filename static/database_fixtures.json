@@ -7,6 +7,13 @@
         }
     },
     {
+        "model": "technical_problems.ServiceType",
+        "pk": 0,
+        "fields": {
+            "name": 1
+        }
+    },
+    {
         "model": "technical_problems.Tarifario",
         "pk": 0,
         "fields": {
@@ -28,8 +35,10 @@
         "model": "technical_problems.Client",
         "fields": {
             "user": 0,
-            "equipamento_tipo": 0,
-            "tarifario": 0
+            "address": "Rua da UM, Guimaraes",
+            "devices": [0],
+            "tariffs": [0],
+            "services": []
         }
     }
 ]
