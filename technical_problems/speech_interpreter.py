@@ -2,15 +2,12 @@
 import tensorflow_hub as hub
 import numpy as np
 import tensorflow_text
-import json
-import fileinput
-import re
-from .keywords import keywords
-import os
+import json, re, os
 from threading import Thread
+from .keywords import keywords
 
-embed = None
 emb_og_typifications = []
+embed = None
 result_sintoma = None
 sintoma = None
 
@@ -23,14 +20,14 @@ def loadModelData():
     global emb_og_typifications
 
     embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder-multilingual-large/2")
-    result_sintoma, sintoma = loadProblems('Sintoma')
+    result_sintoma, sintoma = loadProblemData('Sintoma')
     for i in range(1,4):
-        emb_og_typifications.append(loadProblems('Tipificacao_Nivel_'+str(i)))
+        emb_og_typifications.append(loadProblemData('Tipificacao_Nivel_'+str(i)))
     print('-------------> READY <-------------')
 
 
-def loadProblems(feature_name):
-    ''' 
+def loadProblemData(feature_name):
+    ''' Load typifications and encode them
     '''
     with open(os.getcwd() + '/technical_problems/model_files/input_options.json') as json_file:
         data = json.load(json_file)
@@ -39,16 +36,24 @@ def loadProblems(feature_name):
     return embed(feature)["outputs"], feature_og
 
 
-def replaceWithKeywords(line, keyword_data):
-    keyword_versions = [line]
-    for keyword, matches in keyword_data.items():
-        keyword_versions.extend([re.sub(match, keyword, line) for match in matches if re.search(match, line)])
+def replaceWithKeywords(line, keywords):
+    ''' Replaces matches in line with a keyword
+    :param: string to look for expressions
+    :param: dictionary object that matches keywords with expressions
+    :return: list of versions of the line with replaced expressions
+    '''
+    keyworded_versions = [line]
+    for keyword, matches in keywords.items():
+        keyworded_versions.extend([re.sub(match, keyword, line) for match in matches if re.search(match, line)])
 
-    return keyword_versions
+    return keyworded_versions
 
 
-def getFeatureSuggestion(line, data, result_tipificacao, tipificacao_tipo, response, index):
-    line_versions = replaceWithKeywords(line.lower(), data['common'])
+def getFeatureSuggestion(line, keywords, result_tipificacao, tipificacao_tipo, response, index):
+    ll = line.lower()
+    line_versions = replaceWithKeywords(ll, keywords['common'])
+    if index>0:
+        line_versions.extend(replaceWithKeywords(ll, keywords['tip_'+str(index)]))
     result_sentences =  [embed(line_version)["outputs"] for line_version in line_versions]
     similarity_matrices = [list(np.inner(result_sentence, result_tipificacao)[0]) for result_sentence in result_sentences]
     max_values = [max(similarity_matrice) for similarity_matrice in similarity_matrices]
@@ -59,13 +64,12 @@ def getFeatureSuggestion(line, data, result_tipificacao, tipificacao_tipo, respo
 
 
 def getProblem(features):
-    data = keywords
     response = [None] * 4
     threads = []
     
-    threads.append(Thread(target=getFeatureSuggestion, args=(features[0], data, result_sintoma, sintoma, response, 0)))
+    threads.append(Thread(target=getFeatureSuggestion, args=(features[0], keywords, result_sintoma, sintoma, response, 0)))
     for i in range(0,3):
-        threads.append(Thread(target=getFeatureSuggestion, args=(features[i], data, emb_og_typifications[i][0], emb_og_typifications[i][1], response, i+1)))
+        threads.append(Thread(target=getFeatureSuggestion, args=(features[i], keywords, emb_og_typifications[i][0], emb_og_typifications[i][1], response, i+1)))
 
     for thread in threads:
         thread.start()

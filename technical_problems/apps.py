@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from .sentence_similarity_features import loadModelData
+from .speech_interpreter import loadModelData
 
 
 class TechnicalProblemsConfig(AppConfig):
