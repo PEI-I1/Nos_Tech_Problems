@@ -1,5 +1,7 @@
-tensorflow_hub
-tensorflow_text
+django
+tensorflow
+tensorflow-hub
+tensorflow-text
 pandas
 numpy
 sklearn
