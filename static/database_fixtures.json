@@ -1,7 +1,6 @@
 [
     {
         "model": "technical_problems.Equipamento_Tipo",
-        "pk": 0,
         "fields": {
             "nome": "BOX 1.0 HD (CABO)",
             "servico": 1
@@ -9,18 +8,16 @@
     },
     {
         "model": "technical_problems.Tarifario",
-        "pk": 0,
         "fields": {
             "nome": "6 Canais CABO"
         }
     },
     {
         "model": "technical_problems.Contrato",
-        "pk": 0,
         "fields": {
             "morada": "Rua da Universidade, Guimarães",
-            "tarifario": 0,
-            "equipamentos": [0]
+            "tarifario": "6 Canais CABO",
+            "equipamentos": ["BOX 1.0 HD (CABO)"]
         }
     },
     {
@@ -38,7 +35,7 @@
         "model": "technical_problems.Cliente",
         "fields": {
             "user": 0,
-            "contrato": 0
+            "contrato": "Rua da Universidade, Guimarães"
         }
     }
 ]
