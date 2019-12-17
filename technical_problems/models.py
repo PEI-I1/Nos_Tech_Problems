@@ -2,13 +2,13 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Equipamento_Tipo(models.Model):
-    name = models.CharField(max_length=256)
+    nome = models.CharField(primary_key=True, max_length=256, default="")
     AVAILABLE_SERVICES = [
         (1, 'TV'),
         (2, 'Internet'),
         (3, 'Voz')
     ]
-    service = models.IntegerField(
+    servico = models.IntegerField(
         choices=AVAILABLE_SERVICES,
         default=1
     )
@@ -17,28 +17,28 @@ class Equipamento_Tipo(models.Model):
 
 
 class Tarifario(models.Model):
-    name = models.CharField(max_length=256)
+    nome = models.CharField(primary_key=True, max_length=256, default="")
     def get_by_natural_key(self, tarifario):
         return self.get(name=tarifario)
 
 
-class Contract(models.Model):
+class Contrato(models.Model):
     ''' ISP contract associated with a specific address
     '''
-    address = models.CharField(primary_key=True, max_length=256)
-    tariffs = models.ForeignKey(
+    morada = models.CharField(primary_key=True, max_length=256, default="")
+    tarifario = models.ForeignKey(
         'Tarifario',
         on_delete=models.DO_NOTHING
     )
-    devices = models.ManyToManyField(Equipamento_Tipo)
+    equipamentos = models.ManyToManyField(Equipamento_Tipo)
 
     
-class Client(models.Model):
+class Cliente(models.Model):
     ''' NOS client
     '''
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # contracts = models.ManyToManyField(Contract) - support more than one contract
-    contract = models.ForeignKey(
-        'Contract',
+    contrato = models.ForeignKey(
+        'Contrato',
         on_delete=models.CASCADE,
     )

@@ -1,6 +1,6 @@
 import django.contrib.auth as dAuth
 from django.contrib.auth.models import User
-from .models import Contrato, Client
+from .models import Contrato, Cliente
 
 def login(request, uname, pwd):
     ''' Log a user in and create an HTTP session

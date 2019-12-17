@@ -1,6 +1,5 @@
 from django.http import HttpResponse
 from django.db import IntegrityError
-from .models import ServiceType
 from .speech_interpreter import getProblem
 from . import cli_manager as cm
 from .import model_prediction as mp
