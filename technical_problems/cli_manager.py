@@ -1,6 +1,8 @@
 import django.contrib.auth as dAuth
 from django.contrib.auth.models import User
-from .models import Contrato, Cliente
+from .models import Contrato, Cliente, Equipamento_Tipo, Tarifario
+import json
+from django.db import IntegrityError
 
 def login(request, uname, pwd):
     ''' Log a user in and create an HTTP session
@@ -24,33 +26,38 @@ def logout(request):
     dAuth.logout(request)
 
 
-def register(uname, pwd, equipamento_tipo, tarifario):
+def register(uname, pwd, morada, equipamentos_tipo, tarifario):
     ''' Register a new NOS client
     :param: client username
     :param: client password
+    :param: contract address
     :param: list of equipemnts rented by the client
     :param: mobile tariffs associated with the client
     :return: integer code
     '''
-    if uname and pwd:
-        equipamento_tipo_object = Equipamento_Tipo.objects.all().filter(name = equipamento_tipo)
-        if len(equipamento_tipo_object) == 0:
-            response_as_json = json.dumps({'error': '\'equipamento_tipo\' value is invalid'})
+    if uname and pwd and morada and equipamentos_tipo and tarifario:
+        equipamentos = equipamentos_tipo.split(',')
+        equipamentos_tipo_object = Equipamento_Tipo.objects.all().filter(nome__in = equipamentos)
+        print(equipamentos_tipo_object)
+        if len(equipamentos_tipo_object) != len(equipamentos):
+            response_as_json = json.dumps({'error': '\'equipamentos\' values are invalid'})
         else:
-            equipamento_tipo_object = equipamento_tipo_object[0]
-        
-            tarifario_object = Tarifario.objects.all().filter(name = tarifario)
+            tarifario_object = Tarifario.objects.all().filter(nome = tarifario)
             if len(tarifario_object) == 0:
                 response_as_json = json.dumps({'error': '\'tarifario\' value is invalid'})
             else:
                 tarifario_object = tarifario_object[0]
-
                 try:
-                    user_entry = User.objects.create_user(uname, '', pwd)
-                    client_entry = Client(
-                        user = user_entry,
-                        equipamento_tipo = equipamento_tipo_object,
+                    contract_entry = Contrato(
+                        morada  = morada,
                         tarifario = tarifario_object
+                    )
+                    contract_entry.save()
+                    contract_entry.equipamentos.set(equipamentos_tipo_object)
+                    user_entry = User.objects.create_user(uname, '', pwd)
+                    client_entry = Cliente(
+                        user = user_entry,
+                        contrato = contract_entry
                     )
                     client_entry.save()
                     return 0

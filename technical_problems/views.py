@@ -30,9 +30,10 @@ def logout(request):
 def register(request):
     uname = request.GET.get('username', '')
     pwd = request.GET.get('password', '')
-    equipamento_tipo = request.GET.get('equipamento_tipo', '')
+    morada = request.GET.get('morada', '')
+    equipamentos_tipo = request.GET.get('equipamentos', '')
     tarifario = request.GET.get('tarifario', '')
-    rc = cm.register(uname, pwd, equipamento_tipo, tarifario)
+    rc = cm.register(uname, pwd, morada, equipamentos_tipo, tarifario)
     if not(rc): # success
         response_as_json = json.dumps({'success': 'User has been registered'})
     elif rc == 1: # duplicate user
