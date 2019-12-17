@@ -1,6 +1,6 @@
 import django.contrib.auth as dAuth
 from django.contrib.auth.models import User
-from .models import Equipamento_Tipo, Tarifario, Client
+from .models import Contrato, Client
 
 def login(request, uname, pwd):
     ''' Log a user in and create an HTTP session
@@ -66,13 +66,17 @@ def get_cli_info(uname):
     :return: list with Equipamento_Tipo and Tarifario
     '''
     client_info = []
-    clients = Client.objects \
-                    .filter(user__username=uname) \
-                    .values_list('devices__name', 'tariffs__name')
+    address = Cliente.objects \
+                     .filter(user__username=uname) \
+                     .values_list('contrato')
     if clients:
-        client = clients[0]
-        client_info.append(client[0])
-        client_info.append(client[1])
+        contract_info = Contrato.objects \
+                                .filter(morada=address) \
+                                .values_list('tarifario', 'equipamentos', flat=True)
+        client_info.append(contract_info[0])
+        client_info.append(contract_info[1])  # FIXME
+        service_type_hr = Equipamento_Tipo.objects.get(pk=contract_info[1]).get_servico_display()
+        client_info.append(service_type_hr)
         
     return client_info
 
