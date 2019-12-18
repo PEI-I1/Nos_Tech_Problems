@@ -72,18 +72,24 @@ def get_cli_info(uname):
     :param: client username
     :return: list with Equipamento_Tipo and Tarifario
     '''
-    client_info = []
+    client_info = {}
     address = Cliente.objects \
+                     .all() \
                      .filter(user__username=uname) \
-                     .values_list('contrato')
-    if clients:
+                     .values_list('contrato', flat=True)
+
+    if address:
+        address = address[0]
         contract_info = Contrato.objects \
+                                .all() \
                                 .filter(morada=address) \
-                                .values_list('tarifario', 'equipamentos', flat=True)
-        client_info.append(contract_info[0])
-        client_info.append(contract_info[1])  # FIXME
-        service_type_hr = Equipamento_Tipo.objects.get(pk=contract_info[1]).get_servico_display()
-        client_info.append(service_type_hr)
+                                .values_list('tarifario', 'equipamentos__nome')
+        
+        client_info['tarifario'] = contract_info[0][0]
+        equipamentos = []
+        for equipamento in contract_info:
+            equipamentos.append((equipamento[1], Equipamento_Tipo.objects.get(pk=equipamento[1]).get_servico_display()))
+        client_info['equipamentos'] = equipamentos
         
     return client_info
 

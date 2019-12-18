@@ -51,22 +51,25 @@ def solve(request):
     tip_2 = request.GET.get('tipificacao_tipo_2', '')
     tip_3 = request.GET.get('tipificacao_tipo_3', '')
     servico = request.GET.get('servico', '')
-    uname = '933333333'
+    #uname = '933333333'
+    uname = '911111111'
     # uname = request.user.getUsername()
     
     cli_info = cm.get_cli_info(uname)
+    print(cli_info)
     
     if len(cli_info) > 0:
         if sintoma and tip_1 and tip_2 and tip_3 and servico:
-            services_hr = [service[1] for service in ServiceType.AVAILABLE_SERVICES]
+            #services_hr = [service[1] for service in ServiceType.AVAILABLE_SERVICES]
+            services_hr = ['TV', 'Internet', 'Voz']
             if servico in services_hr:
                 sint, tip_1, tip_2 , tip_3 = getProblem([sintoma, tip_1, tip_2, tip_3])
                 
                 input = [
-                    cli_info[0], # Equipamento
+                    cli_info['equipamentos'][0][0], # Equipamento
                     servico,
                     sint[0], # Sintoma
-                    cli_info[1], # Tarifario
+                    cli_info['tarifario'], # Tarifario
                     tip_1[0], # Tipificação Nivel 1
                     tip_2[0], # Tipificação Nivel 2
                     tip_3[0], # Tipificação Nivel 3
