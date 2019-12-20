@@ -120,3 +120,4 @@ celerybeat-schedule.db
 **/input_options_old.json
 **/model_files/
 **/tarifarios_equipamentos.json
+**/tree_options.json
