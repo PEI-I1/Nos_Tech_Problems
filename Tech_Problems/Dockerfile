@@ -21,7 +21,7 @@ USER solver
 WORKDIR /home/solver
 RUN python3.7 -m pip install pip
 
-COPY ./Tech_Problems Tech_Problems
+COPY . Tech_Problems
 WORKDIR /home/solver/Tech_Problems
 
 RUN echo 'PATH=$PATH:/home/solver/.local/bin' >> ../.bashrc
