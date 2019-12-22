@@ -2,39 +2,47 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Equipamento_Tipo(models.Model):
-    nome = models.CharField(primary_key=True, max_length=256, default="")
-    AVAILABLE_SERVICES = [
-        (1, 'TV'),
-        (2, 'Internet'),
-        (3, 'Voz')
-    ]
-    servico = models.IntegerField(
-        choices=AVAILABLE_SERVICES,
-        default=1
-    )
-    def get_by_natural_key(self, equipamento_tipo):
-        return self.get(name=equipamento_tipo)
-
+    ''' Device used to provide a service
+    '''
+    nome = models.CharField(max_length=256, default="", unique=True)
+    
 
 class Tarifario(models.Model):
-    nome = models.CharField(primary_key=True, max_length=256, default="")
-    def get_by_natural_key(self, tarifario):
-        return self.get(name=tarifario)
+    ''' Specific type of service offering
+    '''
+    nome = models.CharField(max_length=256, default="", unique=True)
+
+
+class Servico(models.Model):
+    AVAILABLE_SERVICES = [
+        ('tv', 'TV'),
+        ('internet', 'Internet'),
+        ('voz', 'Voz')
+    ]
+    servico = models.CharField(
+        max_length=8,
+        choices=AVAILABLE_SERVICES,
+        default='tv'
+    )
+    tarifario = models.ForeignKey(
+        'Tarifario',
+        on_delete=models.DO_NOTHING
+    )
+    equipamento = models.ForeignKey(
+        'Equipamento_Tipo',
+        on_delete=models.DO_NOTHING
+    )
 
 
 class Contrato(models.Model):
     ''' ISP contract associated with a specific address
     '''
     morada = models.CharField(primary_key=True, max_length=256, default="")
-    tarifario = models.ForeignKey(
-        'Tarifario',
-        on_delete=models.DO_NOTHING
-    )
-    equipamentos = models.ManyToManyField(Equipamento_Tipo)
+    servicos = models.ManyToManyField(Servico)
 
     
 class Cliente(models.Model):
-    ''' NOS client
+    ''' ISP client
     '''
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # contracts = models.ManyToManyField(Contract) - support more than one contract

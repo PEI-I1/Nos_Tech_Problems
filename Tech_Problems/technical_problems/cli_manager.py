@@ -38,13 +38,13 @@ def register(uname, pwd, morada, equipamentos_tipo, tarifario):
     if uname and pwd and morada and equipamentos_tipo and tarifario:
         equipamentos = equipamentos_tipo.split(',')
         equipamentos_tipo_object = Equipamento_Tipo.objects.all().filter(nome__in = equipamentos)
-        print(equipamentos_tipo_object)
-        if len(equipamentos_tipo_object) != len(equipamentos):
-            response_as_json = json.dumps({'error': '\'equipamentos\' values are invalid'})
+
+        if len(equipamentos_tipo_object) != len(equipamentos): # invalid equipments provided
+            return 2
         else:
             tarifario_object = Tarifario.objects.all().filter(nome = tarifario)
             if len(tarifario_object) == 0:
-                response_as_json = json.dumps({'error': '\'tarifario\' value is invalid'})
+                return 2
             else:
                 tarifario_object = tarifario_object[0]
                 try:
@@ -67,29 +67,29 @@ def register(uname, pwd, morada, equipamentos_tipo, tarifario):
         return 2
 
 
-def get_cli_info(uname):
-    ''' Fetch information regarding the given client
+def get_cli_info(uname, service):
+    ''' Fetch information regarding a contracted service
     :param: client username
+    :param: service to fetch info about
     :return: list with Equipamento_Tipo and Tarifario
     '''
     client_info = {}
-    address = Cliente.objects \
-                     .all() \
-                     .filter(user__username=uname) \
-                     .values_list('contrato', flat=True)
+    contract = Cliente.objects \
+                      .all() \
+                      .filter(user__username=uname) \
+                      .values_list('contrato', flat=True)
 
     if address:
-        address = address[0]
-        contract_info = Contrato.objects \
-                                .all() \
-                                .filter(morada=address) \
-                                .values_list('tarifario', 'equipamentos__nome')
-        
-        client_info['tarifario'] = contract_info[0][0]
-        equipamentos = []
-        for equipamento in contract_info:
-            equipamentos.append((equipamento[1], Equipamento_Tipo.objects.get(pk=equipamento[1]).get_servico_display()))
-        client_info['equipamentos'] = equipamentos
+        address = contract[0]
+        service = Contrato.get(morada=address) \
+                          .servicos \
+                          .all();
+        service_info = services.objects \
+                               .all() \
+                               .filter(servico = service.lower()) \
+                               .values_list('tarifario__nome', 'equipamento__nome')
+        client_info['tarifario'] = service_info[0][0]
+        client_info['equipamento'] = service_info[0][1]
         
     return client_info
 
