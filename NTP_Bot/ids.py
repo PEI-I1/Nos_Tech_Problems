@@ -28,9 +28,14 @@ class Inter_State:
         :return: True if authentication successful else False
         '''
         self.session = requests.Session()
-        auth_endpoint = settings.SOLVER_ENDPOINT + 'login'
         try:
-            auth_res = self.session.get(auth_endpoint, params={'username':uname, 'pasword':pwd})
+            auth_res = self.session.get(
+                settings.SOLVER_ENDPOINT_LOGIN,
+                params={
+                    'username': uname,
+                    'password': pwd
+                }
+            )
             # FIXME: return meaningful error message (e.g. user not found, incorrect username/password)
             return auth_res.status_code == 200
         except:

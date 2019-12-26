@@ -4,6 +4,7 @@ from . import cli_manager as cm
 from .solver import load_model, predict_resolution
 import json, os
 from .models import Equipamento_Tipo
+from django.contrib.auth.decorators import login_required
 
 model = load_model(os.getcwd() + '/technical_problems/model_files/model')
 
@@ -12,7 +13,13 @@ def login(request):
     '''
     uname = request.GET.get('username', '') # phone number
     pwd = request.GET.get('password', '')   # NIF
-    cli_auth.login(request, uname, pwd)
+    login = cm.login(request, uname, pwd)
+    if login == 0:
+        return HttpResponse(status=200) # Success
+    elif login == 1:
+        return HttpResponse(status=401) # Unauthorized
+    else:
+        return HttpResponse(status=500) # Internal Error
 
     
 def logout(request):
@@ -44,15 +51,16 @@ def register(request):
 
 
 # FIXME: uncomment in production
-#@login_required
+@login_required
 def solve(request):
     sint = request.GET.get('sintoma', '')
     tip_1 = request.GET.get('tipificacao_tipo_1', '')
     tip_2 = request.GET.get('tipificacao_tipo_2', '')
     tip_3 = request.GET.get('tipificacao_tipo_3', '')
     servico = request.GET.get('servico', '')
-    uname = request.GET.get('username', '') #FIXME: remove in production
-    #uname = request.user.getUsername()
+    #uname = request.GET.get('username', '') #FIXME: remove in production
+    uname = request.user.username
+    print('username = ' + uname)
     
     cli_info = cm.get_cli_info(uname, servico)
     
@@ -83,4 +91,5 @@ def solve(request):
     else:
         response_as_json = json.dumps({'error': 'Unexpected error'})
 
+    print(response_as_json)
     return HttpResponse(response_as_json, content_type='json')

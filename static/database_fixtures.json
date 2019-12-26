@@ -34,7 +34,7 @@
         "pk": 0,
         "fields": {
             "username": "933333333",
-            "password": "111111111",
+            "password": "pbkdf2_sha256$150000$9UHI6qBO2659$9Ane4nKQnQ+VK9E4DxruXyflgv+Qf2p8WKs4xrZGZBs=",
             "email": "teste@gmail.com",
             "first_name": "Testing",
             "last_name": "Name"
