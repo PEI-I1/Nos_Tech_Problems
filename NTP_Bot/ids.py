@@ -2,6 +2,7 @@
 import json
 import sys
 import random
+import msg_interpreter
 
 class IDS_State:
     ''' Keeps track of the iterative search state
@@ -10,37 +11,31 @@ class IDS_State:
     def __init__(self):
         pass
 
-
-def get_match(prob_dct, search_space):
-    #TODO: use sentence similarity to search in search space
-    return search_space[0], random.uniform(0,1)
-
-
-def iter_deepening_search(service, usip):
+def iter_deepening_search(prob_desc, service):
     ''' Perform an iterative deepening search based
     on user input and the service type
-    :param: service type
     :param: user input
+    :param: service type
     '''
-    mia = {
+    model_input_args = {
         'Sintoma': ('', 0.0),
         'Tipificacao_Nivel_1':  ('', 0.0),
         'Tipificacao_Nivel_2':  ('', 0.0),
         'Tipificacao_Nivel_3':  ('', 0.0),
     }
     
-    with open('tree_options.json', 'r') as stj:
-        st = json.load(stj)
+    with open('tree_options.json', 'r') as search_tree_json:
+        search_tree = json.load(search_tree_json)
             
-    cs = st['Servico'][service]
-    for ia in mia:
-        cs = cs[ia]
-        ss = [st for st in cs]
-        mt,pb = get_match(usip, ss)
-        if pb < 0.65:
+    cs = search_tree['Servico'][service]
+    for input_arg in model_input_args:
+        cs = cs[input_arg]
+        search_space = [search_tree for search_tree in cs]
+        mt, prob = msg_interpreter.extractProblemData(prob_desc, search_space, 0) #FIXME
+        if prob < 0.65:
             #TODO: request more info OR return support contacts
             break
-        mia[ia] = (mt,pb)
-        if ia != 'Tipificacao_Nivel_3':
+        model_input_args[input_arg] = (mt, prob)
+        if input_arg != 'Tipificacao_Nivel_3':
             cs = cs[mt]
-            print(mia)
+        print(model_input_args)

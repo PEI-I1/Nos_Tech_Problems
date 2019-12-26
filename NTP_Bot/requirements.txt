@@ -1,3 +1,6 @@
 flask
 redis
-redis
+tensorflow
+tensorflow-hub
+tensorflow-text
+numpy
