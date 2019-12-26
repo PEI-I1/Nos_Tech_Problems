@@ -82,4 +82,3 @@ def extractProblemData(prob_desc, search_space, category):
     '''
     ss_embeddings = [embeddings[ss_val] for ss_val in search_space]
     return getFeatureSuggestion(prob_desc, keywords, search_space, ss_embeddings, category)
-    

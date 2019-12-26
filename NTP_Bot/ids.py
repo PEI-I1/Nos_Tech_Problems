@@ -1,21 +1,47 @@
 #!/usr/bin/env python3
-import json
-import sys
-import random
-import msg_interpreter
+import sys, random, json, requests
+import settings, msg_interpreter
 
-class IDS_State:
-    ''' Keeps track of the iterative search state
-    for a single client
+
+class Inter_State:
+    ''' Keeps track of the state of the client-system interaction
+    for a single user
+    
+    Attributes
+    ----------
+    state: int
+    identifier for the current interaction state
+    session: Session
+    HTTP session for a successfully authenticated user
+    service: str
+    Identifier of the service in which the user needs assistance
     '''
     def __init__(self):
-        pass
+        self.state = 0
+        self.session = None
+        self.service = ''
+
+    def setupSession(self, uname, pwd):
+        ''' Sets up an HTTP session with the solver backend
+        :param: username
+        :param: password
+        :return: True if authentication successful else False
+        '''
+        self.session = requests.Session()
+        auth_endpoint = settings.SOLVER_ENDPOINT + 'login'
+        try:
+            auth_res = self.session.get(auth_endpoint, params={'username':uname, 'pasword':pwd})
+            # FIXME: return meaningful error message (e.g. user not found, incorrect username/password)
+            return auth_res.status_code == 200
+        except:
+            return False
 
 def iter_deepening_search(prob_desc, service):
     ''' Perform an iterative deepening search based
     on user input and the service type
     :param: user input
     :param: service type
+    :return: input values for solver model
     '''
     model_input_args = {
         'Sintoma': ('', 0.0),
@@ -38,4 +64,5 @@ def iter_deepening_search(prob_desc, service):
         model_input_args[input_arg] = (mt, prob)
         if input_arg != 'Tipificacao_Nivel_3':
             cs = cs[mt]
-        print(model_input_args)
+
+    return model_input_args
