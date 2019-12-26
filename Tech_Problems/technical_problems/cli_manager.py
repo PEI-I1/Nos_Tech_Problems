@@ -1,6 +1,6 @@
 import django.contrib.auth as dAuth
 from django.contrib.auth.models import User
-from .models import Contrato, Cliente, Equipamento_Tipo, Tarifario
+from .models import Contrato, Cliente, Equipamento_Tipo, Tarifario, Servico
 import json
 from django.db import IntegrityError
 
@@ -71,7 +71,7 @@ def get_cli_info(uname, service):
     ''' Fetch information regarding a contracted service
     :param: client username
     :param: service to fetch info about
-    :return: list with Equipamento_Tipo and Tarifario
+    :return: list with Equipamento_Tipo, Tarifario and Servico
     '''
     client_info = {}
     contract = Cliente.objects \
@@ -79,17 +79,28 @@ def get_cli_info(uname, service):
                       .filter(user__username=uname) \
                       .values_list('contrato', flat=True)
 
-    if address:
+    if contract:
         address = contract[0]
-        service = Contrato.get(morada=address) \
-                          .servicos \
-                          .all();
-        service_info = services.objects \
-                               .all() \
-                               .filter(servico = service.lower()) \
-                               .values_list('tarifario__nome', 'equipamento__nome')
-        client_info['tarifario'] = service_info[0][0]
-        client_info['equipamento'] = service_info[0][1]
+
+        services = Contrato.objects \
+                           .get(morada=address) \
+                           .servicos \
+                           .all()
+
+        service_info = services.filter(servico=service.lower()) \
+                               .values_list('tarifario__nome', 'equipamento__nome', 'servico')
+
+        if not service_info:
+            client_info['erro'] = 1
+
+        else:
+            client_info['tarifario'] = service_info[0][0]
+            client_info['equipamento'] = service_info[0][1]
+            client_info['servico'] = dict(Servico.AVAILABLE_SERVICES)[service_info[0][2]]
         
+    else:
+        client_info['erro'] = 2
+    
+    print(client_info)
     return client_info
 

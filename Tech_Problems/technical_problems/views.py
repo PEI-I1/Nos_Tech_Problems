@@ -56,11 +56,16 @@ def solve(request):
     
     cli_info = cm.get_cli_info(uname, servico)
     
-    if len(cli_info) > 0:
-        if equipamento:
+    if cli_info:
+        if 'erro' in cli_info:
+            if cli_info['erro'] == 1:
+                response_as_json = json.dumps({'error': 'Client doesn\'t have a device with that type of service'})
+            else:
+                response_as_json = json.dumps({'error': 'Can\'t find client'})
+        else:
             input = [
                 cli_info['equipamento'],
-                servico,
+                cli_info['servico'],
                 sint,
                 cli_info['tarifario'],
                 tip_1,
@@ -74,13 +79,8 @@ def solve(request):
                                            'res': {
                                                'prediction': prediction,
                                                'probability': probability
-                                           }})
-                    
-        else:
-            response_as_json = json.dumps({'status': 1,
-                                           'error': 'Client doesn\'t have a device with that type of service'})
+                                           }})                    
     else:
-        response_as_json = json.dumps({'status': 1,
-                                       'error': 'Can\'t find client'})
+        response_as_json = json.dumps({'error': 'Unexpected error'})
 
     return HttpResponse(response_as_json, content_type='json')
