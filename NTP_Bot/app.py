@@ -21,22 +21,32 @@ def solve():
         
         if exec_state.state == 0:
             auth_data = msg.split(' ')
-            if len(auth_data) >= 2 and exec_state.setupSession(auth_data[0], auth_data[1]):
-                ret_dict['msg'] = settings.UPROMPT[1]
-                exec_state.state = exec_state.state + 1
+            if len(auth_data) >= 2:
+                login = exec_state.setupSession(auth_data[0], auth_data[1])
+                if login == 0:
+                    ret_dict['msg'] = settings.UPROMPT[1]
+                    exec_state.state = exec_state.state + 1
+                elif login == 1:
+                    ret_dict['msg'] = settings.UPROMPT[4]
+                else:
+                    ret_dict['msg'] = settings.UPROMPT[5]
             else:
-                ret_dict['msg'] = settings.UPROMPT[0]
+                ret_dict['msg'] = settings.UPROMPT[5]
                 
         elif exec_state.state == 1:
-            #FIXME: perform service validation
-            exec_state.service = msg; 
-            ret_dict['msg'] = settings.UPROMPT[2]
-            exec_state.state = exec_state.state + 1
+            services_array = [('tv', 'TV'), ('televisão', 'TV'), ('internet', 'Internet'), ('wifi', 'Internet'), ('voz', 'Voz')]
+            match_service = [x[1] for x in services_array if msg.lower() == x[0]]
+            if match_service:
+                exec_state.service = match_service[0]
+                ret_dict['msg'] = settings.UPROMPT[2]
+                exec_state.state = exec_state.state + 1
+            else:
+                ret_dict['msg'] = settings.UPROMPT[3]
             
         elif exec_state.state == 2:
-            model_input_args = ids.iter_deepening_search(msg, 'Internet')
-            #TODO: request model backend for possible solution
-            ret_dict['msg'] = 'TODO'
+            model_input_args = ids.iter_deepening_search(msg, exec_state.service)
+            solution = exec_state.get_problem_solution(model_input_args)
+            ret_dict['msg'] = 'Sugestão: ' + solution + '.'
             
         cs['content'].append(msg)        
         cs['state'] = base64.encodebytes(pickle.dumps(exec_state)).decode()        

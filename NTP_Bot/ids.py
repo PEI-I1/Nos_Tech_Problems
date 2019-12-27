@@ -36,10 +36,41 @@ class Inter_State:
                     'password': pwd
                 }
             )
-            # FIXME: return meaningful error message (e.g. user not found, incorrect username/password)
-            return auth_res.status_code == 200
+            if auth_res.status_code == 200:
+                return 0
+            elif auth_res.status_code == 401:
+                return 1
+            else: # auth_res.status_code == 500
+                return 2
         except:
-            return False
+            return 2
+
+    def get_problem_solution(self, model_input_args):
+        ''' Use solver backend to retrieve a possible solution for the problem
+        :param: model input arguments
+        :return: possible solution
+        '''
+
+        sintoma = model_input_args['Sintoma'][0]
+        tip_1 = model_input_args['Tipificacao_Nivel_1'][0]
+        tip_2 = model_input_args['Tipificacao_Nivel_2'][0]
+        tip_3 = model_input_args['Tipificacao_Nivel_3'][0]
+
+        solver = self.session.get(
+            settings.SOLVER_ENDPOINT_SOLVE,
+            params={
+                'sintoma': sintoma,
+                'tipificacao_tipo_1': tip_1,
+                'tipificacao_tipo_2': tip_2,
+                'tipificacao_tipo_3': tip_3,
+                'servico': self.service
+            }
+        )
+
+        solver_json = json.loads(solver.text)
+        
+        print(solver_json)
+        return solver_json['res']['prediction']
 
 def iter_deepening_search(prob_desc, service):
     ''' Perform an iterative deepening search based
@@ -63,11 +94,12 @@ def iter_deepening_search(prob_desc, service):
         cs = cs[input_arg]
         search_space = [search_tree for search_tree in cs]
         mt, prob = msg_interpreter.extractProblemData(prob_desc, search_space, 0) #FIXME
-        if prob < 0.65:
+        #if prob < 0.65:
             #TODO: request more info OR return support contacts
-            break
+        #    print()
         model_input_args[input_arg] = (mt, prob)
         if input_arg != 'Tipificacao_Nivel_3':
             cs = cs[mt]
 
+    print(model_input_args)
     return model_input_args
