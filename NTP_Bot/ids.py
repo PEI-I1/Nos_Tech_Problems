@@ -68,9 +68,17 @@ class Inter_State:
         )
 
         solver_json = json.loads(solver.text)
-        
         print(solver_json)
-        return solver_json['res']['prediction']
+
+        status = solver_json['status']
+        if status == 0: # Success
+            return 1, solver_json['res']['prediction']
+        elif status == 1:
+            return 0, 'Não existe informação de algum equipamento seu com serviço de ' + self.service + '.'
+        elif status == 2:
+            return 0, 'Não foi possível encontrar os seus detalhes de cliente. Tente de novo.'
+        else:
+            return 0, 'Ocorreu um erro durante a operação. Tente de novo.'
 
 def iter_deepening_search(prob_desc, service):
     ''' Perform an iterative deepening search based

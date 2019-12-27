@@ -67,9 +67,15 @@ def solve(request):
     if cli_info:
         if 'erro' in cli_info:
             if cli_info['erro'] == 1:
-                response_as_json = json.dumps({'error': 'Client doesn\'t have a device with that type of service'})
+                response_as_json = json.dumps({
+                    'status': 1,
+                    'error': 'Client doesn\'t have a device with that type of service'
+                })
             else:
-                response_as_json = json.dumps({'error': 'Can\'t find client'})
+                response_as_json = json.dumps({
+                    'status': 2,
+                    'error': 'Can\'t find client'
+                })
         else:
             input = [
                 cli_info['equipamento'],
@@ -89,7 +95,10 @@ def solve(request):
                                                'probability': probability
                                            }})                    
     else:
-        response_as_json = json.dumps({'error': 'Unexpected error'})
+        response_as_json = json.dumps({
+            'status': 3,
+            'error': 'Unexpected error'
+        })
 
     print(response_as_json)
     return HttpResponse(response_as_json, content_type='json')
