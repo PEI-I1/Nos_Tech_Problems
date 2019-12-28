@@ -15,11 +15,19 @@ class Inter_State:
     HTTP session for a successfully authenticated user
     service: str
     Identifier of the service in which the user needs assistance
+    model_args: dictionary
+    Maps each input argument to it's value and confidence (based on semantic similarity)
     '''
     def __init__(self):
         self.state = 0
         self.session = None
         self.service = ''
+        self.model_args = {
+            'Sintoma': ('', 0.0),
+            'Tipificacao_Nivel_1':  ('', 0.0),
+            'Tipificacao_Nivel_2':  ('', 0.0),
+            'Tipificacao_Nivel_3':  ('', 0.0)
+        }
 
     def setupSession(self, uname, pwd):
         ''' Sets up an HTTP session with the solver backend
@@ -45,16 +53,15 @@ class Inter_State:
         except:
             return 2
 
-    def get_problem_solution(self, model_input_args):
+    def get_problem_solution(self):
         ''' Use solver backend to retrieve a possible solution for the problem
-        :param: model input arguments
         :return: possible solution
         '''
 
-        sintoma = model_input_args['Sintoma'][0]
-        tip_1 = model_input_args['Tipificacao_Nivel_1'][0]
-        tip_2 = model_input_args['Tipificacao_Nivel_2'][0]
-        tip_3 = model_input_args['Tipificacao_Nivel_3'][0]
+        sintoma = self.model_args['Sintoma'][0]
+        tip_1 = self.model_args['Tipificacao_Nivel_1'][0]
+        tip_2 = self.model_args['Tipificacao_Nivel_2'][0]
+        tip_3 = self.model_args['Tipificacao_Nivel_3'][0]
 
         solver = self.session.get(
             settings.SOLVER_ENDPOINT_SOLVE,
@@ -80,34 +87,26 @@ class Inter_State:
         else:
             return 0, 'Ocorreu um erro durante a operação. Tente de novo.'
 
-def iter_deepening_search(prob_desc, service):
-    ''' Perform an iterative deepening search based
-    on user input and the service type
-    :param: user input
-    :param: service type
-    :return: input values for solver model
-    '''
-    model_input_args = {
-        'Sintoma': ('', 0.0),
-        'Tipificacao_Nivel_1':  ('', 0.0),
-        'Tipificacao_Nivel_2':  ('', 0.0),
-        'Tipificacao_Nivel_3':  ('', 0.0),
-    }
-    
-    with open('tree_options.json', 'r') as search_tree_json:
-        search_tree = json.load(search_tree_json)
-            
-    cs = search_tree['Servico'][service]
-    for input_arg in model_input_args:
-        cs = cs[input_arg]
-        search_space = [search_tree for search_tree in cs]
-        mt, prob = msg_interpreter.extractProblemData(prob_desc, search_space, 0) #FIXME
-        #if prob < 0.65:
-            #TODO: request more info OR return support contacts
-        #    print()
-        model_input_args[input_arg] = (mt, prob)
-        if input_arg != 'Tipificacao_Nivel_3':
-            cs = cs[mt]
+    def iter_deepening_search(self, prob_desc):
+        ''' Perform an iterative deepening search based
+        on user input and the service type
+        :param: user input
+        :return: True on success, else False
+        '''
+        with open('tree_options.json', 'r') as search_tree_json:
+            search_tree = json.load(search_tree_json)
+        
+        cs = search_tree['Servico'][self.service]
+        for input_arg in self.model_args:
+            cs = cs[input_arg]
+            search_space = [search_tree for search_tree in cs]
+            mt, prob = msg_interpreter.extractProblemData(prob_desc, search_space, 0)
+            if prob < 0.0: #FIXME: change threshold to 0.65
+                return False
+            elif prob > self.model_args[input_arg][1]:
+                self.model_args[input_arg] = (mt, prob)
 
-    print(model_input_args)
-    return model_input_args
+            if input_arg != 'Tipificacao_Nivel_3':
+                cs = cs[mt]
+
+        return True

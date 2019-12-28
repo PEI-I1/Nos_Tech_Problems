@@ -4,7 +4,8 @@ UPROMPT = [
     'Descreva o problema em causa.',
     'Não foi possível reconhecer qual o serviço a que se refere, tente novamente.',
     'Não foi possível obter dados de um cliente com os dados que inseriu. Envie novamente o seu nº de telemóvel e o NIF separados por um espaço.',
-    'Aconteceu um erro ao efetuar a operação de autenticação. Envie novamente o seu nº de telemóvel e o NIF separados por um espaço.'
+    'Aconteceu um erro ao efetuar a operação de autenticação. Envie novamente o seu nº de telemóvel e o NIF separados por um espaço.',
+    'Não foi possível reconhecer o problema descrito, tente novamente.'
 ]
 
 SOLVER_ENDPOINT = 'http://127.0.0.1:8000/problems/'

@@ -44,13 +44,14 @@ def solve():
                 ret_dict['msg'] = settings.UPROMPT[3]
             
         elif exec_state.state == 2:
-            model_input_args = ids.iter_deepening_search(msg, exec_state.service)
-            success, solution = exec_state.get_problem_solution(model_input_args)
-            if success:
-                ret_dict['msg'] = 'Sugestão: ' + solution + '.'
+            if exec_state.iter_deepening_search(msg):
+                success, solution = exec_state.get_problem_solution()
+                if success:
+                    ret_dict['msg'] = 'Sugestão: ' + solution + '.'
+                else:
+                    ret_dict['msg'] = solution
             else:
-                ret_dict['msg'] = solution
-            
+                ret_dict['msg'] = settings.UPROMPT[6]
         cs['content'].append(msg)        
         cs['state'] = base64.encodebytes(pickle.dumps(exec_state)).decode()        
     else:
