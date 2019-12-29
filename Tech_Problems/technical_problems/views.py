@@ -35,6 +35,9 @@ def logout(request):
 
 
 def register(request):
+    ''' Register a new user/client in the database to allow
+    for technical assistance to be provided
+    '''
     uname = request.GET.get('username', '')
     pwd = request.GET.get('password', '')
     morada = request.GET.get('morada', '')
@@ -53,6 +56,9 @@ def register(request):
 # FIXME: uncomment in production
 @login_required
 def solve(request):
+    ''' Provide a solution to the problem described by the input
+    parameters
+    '''
     sint = request.GET.get('sintoma', '')
     tip_1 = request.GET.get('tipificacao_tipo_1', '')
     tip_2 = request.GET.get('tipificacao_tipo_2', '')

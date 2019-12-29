@@ -14,6 +14,8 @@ class Tarifario(models.Model):
 
 
 class Servico(models.Model):
+    ''' Service offering provided to a specific client
+    '''
     AVAILABLE_SERVICES = [
         ('tv', 'TV'),
         ('internet', 'Internet'),
