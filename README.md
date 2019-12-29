@@ -45,9 +45,11 @@ available by the [Tech Problems module](Tech_Problems) to facilitate future deve
 #### NTP Bot
 <details>
 <summary>Public API endpoint that allows user interaction with the NTP Bot</summary>
+
 ```http
 POST /solver
 ```
+
 </details>
 
 #### NOS Tech Problems
@@ -56,7 +58,7 @@ which requires all requests made to the API to take advantage of
 [HTTP sessions](https://developer.mozilla.org/en-US/docs/Web/HTTP/Session).
 
 <details>
-<summary></summary>
+<summary>Create an HTTP Session for a (valid) user</summary>
 ```http
 GET /problems/login?username=<>&password=<>
 ```
