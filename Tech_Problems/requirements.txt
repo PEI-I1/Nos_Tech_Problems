@@ -1,7 +1,4 @@
 django
-tensorflow
-tensorflow-hub
-tensorflow-text
 pandas
 numpy
 sklearn
