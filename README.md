@@ -59,6 +59,7 @@ which requires all requests made to the API to take advantage of
 
 <details>
 <summary>Create an HTTP Session for a (valid) user</summary>
+
 ```http
 GET /problems/login?username=<>&password=<>
 ```
@@ -72,6 +73,7 @@ GET /problems/login?username=<>&password=<>
 
 <details>
 <summary>Clears a users session data</summary>
+
 ```http
 GET /problems/logout
 ```
@@ -79,6 +81,7 @@ GET /problems/logout
 
 <details>
 <summary>Provides a solution for a problem described by the input parameters</summary>
+
 ```http
 GET /problems/solve?sintoma=<>&tipificacao_tipo_1=<>&tipificacao_tipo_2=<>&tipificacao_tipo_3=<>
 ```
@@ -94,6 +97,7 @@ GET /problems/solve?sintoma=<>&tipificacao_tipo_1=<>&tipificacao_tipo_2=<>&tipif
 
 <details>
 <summary>Register a new user/client in the NOS Tech Problems backend</summary>
+
 ```http
 GET /problems/register?username=<>&password=<>&morada=<>&equipamentos=<>&tarifario=<>
 ```
