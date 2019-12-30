@@ -22,6 +22,7 @@ class Inter_State:
         self.state = 0
         self.session = None
         self.service = ''
+        self.error_count = 0
         self.model_args = {
             'Sintoma': ('', 0.0),
             'Tipificacao_Nivel_1':  ('', 0.0),
@@ -101,7 +102,8 @@ class Inter_State:
             cs = cs[input_arg]
             search_space = [search_tree for search_tree in cs]
             mt, prob = msg_interpreter.extractProblemData(prob_desc, search_space, 0)
-            if prob < 0.0: #FIXME: change threshold to 0.65
+            if prob < 0.65: #FIXME: change threshold to 0.65
+                #print(self.model_args)
                 return False
             elif prob > self.model_args[input_arg][1]:
                 self.model_args[input_arg] = (mt, prob)
@@ -109,4 +111,5 @@ class Inter_State:
             if input_arg != 'Tipificacao_Nivel_3':
                 cs = cs[mt]
 
+        #print(self.model_args)
         return True
