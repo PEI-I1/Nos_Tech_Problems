@@ -125,6 +125,10 @@ def solve():
 
 
 def save_to_log(exec_state, success):
+    ''' Save problems received and suggestions made
+    :param: execution state of conversation
+    :param: if the suggestion made resolved the problem or not
+    '''
     log = open(settings.FILENAME, "a")
 
     resp_array = [None] * 9
