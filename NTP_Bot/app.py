@@ -52,6 +52,7 @@ def solve():
                     ret_dict['msg'] = solution
             else:
                 ret_dict['msg'] = settings.UPROMPT[6]
+
         cs['content'].append(msg)        
         cs['state'] = base64.encodebytes(pickle.dumps(exec_state)).decode()        
     else:
@@ -71,4 +72,4 @@ def solve():
 if __name__ == '__main__':
     redis_db = redis.Redis(host='127.0.0.1', port=6379, db=0)
     msg_interpreter.loadModelData()
-    app.run(port=5000, threaded=True)
+    app.run(host='0.0.0.0', port=5000, threaded=True)
