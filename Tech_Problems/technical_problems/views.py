@@ -66,7 +66,6 @@ def solve(request):
     servico = request.GET.get('servico', '')
     #uname = request.GET.get('username', '') #FIXME: remove in production
     uname = request.user.username
-    print('username = ' + uname)
     
     cli_info = cm.get_cli_info(uname, servico)
     
@@ -93,18 +92,17 @@ def solve(request):
                 tip_3,
             ]
                     
-            prediction,probability = predict_resolution(input, model) #'Desliga e volta a ligar', 0.56 
+            top_resols = predict_resolution(input, model) #'Desliga e volta a ligar', 0.56 
 
             response_as_json = json.dumps({'status': 0,
-                                           'res': {
-                                               'prediction': prediction,
-                                               'probability': probability
-                                           }})                    
+                                           'equipamento': cli_info['equipamento'],
+                                           'tarifario': cli_info['tarifario'],
+                                           'res': [{'prediction': pred, 'probability': prob} for pred,prob in top_resols]
+            })
     else:
         response_as_json = json.dumps({
             'status': 3,
             'error': 'Unexpected error'
         })
 
-    print(response_as_json)
     return HttpResponse(response_as_json, content_type='json')

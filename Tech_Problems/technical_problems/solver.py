@@ -36,5 +36,7 @@ def predict_resolution(inputList,model):
     input_encoded = input_encoded.values.tolist()
     
     ynew = model.predict(input_encoded)
-    probability = np.amax(model.predict_proba(input_encoded)) * 100
-    return target_decoded(ynew)[0],probability
+    top_ynew = target_decoded(ynew)[:3]
+    probs = model.predict_proba(input_encoded)
+    top_probs = np.sort(probs[0])[-len(top_ynew):][::-1]
+    return list(zip(top_ynew,top_probs))
