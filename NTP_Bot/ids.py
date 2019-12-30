@@ -29,6 +29,10 @@ class Inter_State:
             'Tipificacao_Nivel_2':  ('', 0.0),
             'Tipificacao_Nivel_3':  ('', 0.0)
         }
+        #self.equipment = ''
+        #self.tariff = ''
+        #self.suggestions = ''
+        self.suggestion = ''
 
     def setupSession(self, uname, pwd):
         ''' Sets up an HTTP session with the solver backend
@@ -79,8 +83,12 @@ class Inter_State:
         print(solver_json)
 
         status = solver_json['status']
+        #self.equipment = solver_json['equipamento']
+        #self.tariff = solver_json['tarifario']
+        #self.suggestions = solver_json['res']
         if status == 0: # Success
-            return 1, solver_json['res']['prediction']
+            self.suggestion = solver_json['res']['prediction']
+            return 1, self.suggestion
         elif status == 1:
             return 0, 'Não existe informação de algum equipamento seu com serviço de ' + self.service + '.'
         elif status == 2:

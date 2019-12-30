@@ -63,7 +63,9 @@ def solve():
             if exec_state.iter_deepening_search(msg):
                 success, solution = exec_state.get_problem_solution()
                 if success:
-                    ret_dict['msg'] = 'Sugestão: ' + solution + '.'
+                    ret_dict['msg'] = 'Sugestão: ' + solution + '.\n\nResolveu o seu problema? (sim/não)'
+                    exec_state.state = exec_state.state + 1
+                    exec_state.error_count = 0
                 else:
                     ret_dict['msg'] = solution
             else:
@@ -74,6 +76,33 @@ def solve():
                     save_on_redis = False
                 else:
                     ret_dict['msg'] = settings.UPROMPT[6]
+
+        elif exec_state.state == 3:
+            options_array = [('sim', 1), ('s', 1), ('não', 0), ('nao', 0), ('n', 0)]
+            match_option = [x[1] for x in options_array if msg.lower() == x[0]]
+            if match_option:
+                option = match_option[0]
+                if option: # problem has been resolved
+                    ret_dict['msg'] = settings.UPROMPT[9]
+                    ret_dict['chat_id'] = -1
+                    save_on_redis = False
+                    
+                    # write to log file of problems
+                    save_to_log(exec_state, 1)
+                else: # problem has not been resolved
+                    # write to log file of problems
+                    save_to_log(exec_state, 0)
+
+                    ret_dict['msg'] = 'Outra sugestão: ' + '<sugestao>.\n\nResolveu o seu problema? (sim/não)'
+                    # TODO if there's not more suggestions return chat_id = -2
+            else:
+                exec_state.error_count = exec_state.error_count + 1
+                if exec_state.error_count == settings.MAX_ERROR_COUNT:
+                    ret_dict['msg'] = settings.UPROMPT[7]
+                    ret_dict['chat_id'] = -1
+                    save_on_redis = False
+                else:
+                    ret_dict['msg'] = settings.UPROMPT[8]
 
         if save_on_redis:
             cs['content'].append(msg)        
@@ -93,6 +122,30 @@ def solve():
         response=json.dumps(ret_dict),
         mimetype='application/json'
     )
+
+
+def save_to_log(exec_state, success):
+    log = open(settings.FILENAME, "a")
+
+    resp_array = [None] * 9
+    # Serviço
+    resp_array[0] = exec_state.service
+    # Equipamento
+    resp_array[1] = 'equipamento' # exec_state.equipment
+    # Tarifário
+    resp_array[2] = 'tarifario' # exec_state.tariff
+    # Sintoma
+    resp_array[3] = exec_state.model_args['Sintoma'][0]
+    # Tipificações 1, 2 e 3
+    resp_array[4] = exec_state.model_args['Tipificacao_Nivel_1'][0]
+    resp_array[5] = exec_state.model_args['Tipificacao_Nivel_2'][0]
+    resp_array[6] = exec_state.model_args['Tipificacao_Nivel_3'][0]
+    # Sugestão
+    resp_array[7] = exec_state.suggestion
+    # Resolveu o problema?
+    resp_array[8] = 'sim' if success else 'não'
+
+    log.write(','.join(resp_array) + '\n')
 
 
 if __name__ == '__main__':
