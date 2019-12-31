@@ -93,8 +93,14 @@ def solve():
                     # write to log file of problems
                     save_to_log(exec_state, 0)
 
-                    ret_dict['msg'] = 'Outra sugestão: ' + '<sugestao>.\n\nResolveu o seu problema? (sim/não)'
-                    # TODO if there's not more suggestions return chat_id = -2
+                    if len(exec_state.suggestions) > exec_state.suggestion_count + 1: # there are still more suggestions to make
+                        exec_state.suggestion_count = exec_state.suggestion_count + 1
+                        new_suggestion = exec_state.suggestions[exec_state.suggestion_count]['prediction']
+                        ret_dict['msg'] = 'Outra sugestão: ' + new_suggestion + '.\n\nResolveu o seu problema? (sim/não)'
+                    else: # no more suggestions
+                        ret_dict['msg'] = settings.UPROMPT[10]
+                        ret_dict['chat_id'] = -2
+                        save_on_redis = False
             else:
                 exec_state.error_count = exec_state.error_count + 1
                 if exec_state.error_count == settings.MAX_ERROR_COUNT:
@@ -135,9 +141,9 @@ def save_to_log(exec_state, success):
     # Serviço
     resp_array[0] = exec_state.service
     # Equipamento
-    resp_array[1] = 'equipamento' # exec_state.equipment
+    resp_array[1] = exec_state.equipment
     # Tarifário
-    resp_array[2] = 'tarifario' # exec_state.tariff
+    resp_array[2] = exec_state.tariff
     # Sintoma
     resp_array[3] = exec_state.model_args['Sintoma'][0]
     # Tipificações 1, 2 e 3

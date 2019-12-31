@@ -8,7 +8,8 @@ UPROMPT = [
     'Não foi possível reconhecer o problema descrito, tente novamente.',
     'Foi atingido o máximo de tentativas para esta etapa do processo. A sair do modo de resolução de problemas técnicos...',
     'Não foi possível reconhecer a sua mensagem. A sugestão resolveu o seu problema? (sim/não)',
-    'Ainda bem que o seu problema ficou resolvido. A sair do modo de resolução de problemas técnicos...'
+    'Ainda bem que o seu problema ficou resolvido. A sair do modo de resolução de problemas técnicos...',
+    'Não existem mais sugestões para resolver o seu problema. A sair do modo de resolução de problemas técnicos...'
 ]
 
 SOLVER_ENDPOINT = 'http://127.0.0.1:8000/problems/'
