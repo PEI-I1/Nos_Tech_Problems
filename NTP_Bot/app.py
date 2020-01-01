@@ -46,10 +46,20 @@ def solve():
             services_array = [('tv', 'TV'), ('televisão', 'TV'), ('televisao', 'TV'), ('internet', 'Internet'), ('net', 'Internet'), ('wifi', 'Internet'), ('voz', 'Voz')]
             match_service = [x[1] for x in services_array if msg.lower() == x[0]]
             if match_service:
-                exec_state.service = match_service[0]
-                exec_state.state = exec_state.state + 1
-                exec_state.error_count = 0
-                ret_dict['msg'] = settings.UPROMPT[2]
+                checker = exec_state.check_client_services(match_service[0])
+                if checker:
+                    exec_state.service = match_service[0]
+                    exec_state.state = exec_state.state + 1
+                    exec_state.error_count = 0
+                    ret_dict['msg'] = settings.UPROMPT[2]
+                else:
+                    exec_state.error_count = exec_state.error_count + 1
+                    if exec_state.error_count == settings.MAX_ERROR_COUNT:
+                        ret_dict['msg'] = settings.UPROMPT[7]
+                        ret_dict['chat_id'] = -1
+                        save_on_redis = False
+                    else:
+                        ret_dict['msg'] = settings.UPROMPT[11]
             else:
                 exec_state.error_count = exec_state.error_count + 1
                 if exec_state.error_count == settings.MAX_ERROR_COUNT:
@@ -72,7 +82,7 @@ def solve():
                 exec_state.error_count = exec_state.error_count + 1
                 if exec_state.error_count == settings.MAX_ERROR_COUNT:
                     ret_dict['msg'] = settings.UPROMPT[7]
-                    ret_dict['chat_id'] = -1
+                    ret_dict['chat_id'] = -2
                     save_on_redis = False
                 else:
                     ret_dict['msg'] = settings.UPROMPT[6]

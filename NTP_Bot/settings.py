@@ -9,11 +9,13 @@ UPROMPT = [
     'Foi atingido o máximo de tentativas para esta etapa do processo. A sair do modo de resolução de problemas técnicos...',
     'Não foi possível reconhecer a sua mensagem. A sugestão resolveu o seu problema? (sim/não)',
     'Ainda bem que o seu problema ficou resolvido. A sair do modo de resolução de problemas técnicos...',
-    'Não existem mais sugestões para resolver o seu problema. A sair do modo de resolução de problemas técnicos...'
+    'Não existem mais sugestões para resolver o seu problema. A sair do modo de resolução de problemas técnicos...',
+    'Não tem esse tipo de serviço contratado. Por favor tente novamente.'
 ]
 
 SOLVER_ENDPOINT = 'http://127.0.0.1:8000/problems/'
 SOLVER_ENDPOINT_LOGIN = SOLVER_ENDPOINT + 'login'
 SOLVER_ENDPOINT_SOLVE = SOLVER_ENDPOINT + 'solve'
+SOLVER_ENDPOINT_SERVICE_CHECK = SOLVER_ENDPOINT + 'client_has_service'
 MAX_ERROR_COUNT = 3
 FILENAME = 'problems_log.csv'

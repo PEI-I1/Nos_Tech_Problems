@@ -123,3 +123,20 @@ class Inter_State:
 
         #print(self.model_args)
         return True
+
+
+    def check_client_services(self, service): 
+        ''' Check if a client has a specific service in his contract
+        :param: service to check
+        :return: True or False
+        '''
+        checker = self.session.get(
+            settings.SOLVER_ENDPOINT_SERVICE_CHECK,
+            params={
+                'servico': service
+            }
+        )
+        checker_json = json.loads(checker.text)
+        #print(checker_json)
+        res = checker_json['has']
+        return res

@@ -52,6 +52,28 @@ def register(request):
         response_as_json = json.dumps({'error': 'Bad parameters'})
     return HttpResponse(response_as_json, content_type='json')
 
+# FIXME: uncomment in production
+@login_required
+def client_has_service(request):
+    ''' Check if a client has a specific service in his contract
+    '''
+    servico = request.GET.get('servico', '')
+    #uname = request.GET.get('username', '') #FIXME: remove in production
+    uname = request.user.username
+
+    if servico:
+        response = cm.cli_has_service(uname, servico)
+
+        response_as_json = json.dumps({
+            'has': response
+        })
+    else:
+        response_as_json = json.dumps({
+            'has': False
+        })
+
+    return HttpResponse(response_as_json, content_type='json')
+
 
 # FIXME: uncomment in production
 @login_required
