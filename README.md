@@ -80,6 +80,19 @@ GET /problems/logout
 </details>
 
 <details>
+<summary>Checks whether a client has a contract for the given service</summary>
+
+```http
+GET /problems/client_has_service?servico=<>
+```
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `servico` | `string` | Internal description of a single ISP service |
+
+</details>
+
+<details>
 <summary>Provides a solution for a problem described by the input parameters</summary>
 
 ```http

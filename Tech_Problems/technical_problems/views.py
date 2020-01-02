@@ -52,13 +52,12 @@ def register(request):
         response_as_json = json.dumps({'error': 'Bad parameters'})
     return HttpResponse(response_as_json, content_type='json')
 
-# FIXME: uncomment in production
+
 @login_required
 def client_has_service(request):
     ''' Check if a client has a specific service in his contract
     '''
     servico = request.GET.get('servico', '')
-    #uname = request.GET.get('username', '') #FIXME: remove in production
     uname = request.user.username
 
     if servico:
@@ -75,7 +74,6 @@ def client_has_service(request):
     return HttpResponse(response_as_json, content_type='json')
 
 
-# FIXME: uncomment in production
 @login_required
 def solve(request):
     ''' Provide a solution to the problem described by the input
@@ -86,7 +84,6 @@ def solve(request):
     tip_2 = request.GET.get('tipificacao_tipo_2', '')
     tip_3 = request.GET.get('tipificacao_tipo_3', '')
     servico = request.GET.get('servico', '')
-    #uname = request.GET.get('username', '') #FIXME: remove in production
     uname = request.user.username
     
     cli_info = cm.get_cli_info(uname, servico)
@@ -114,7 +111,7 @@ def solve(request):
                 tip_3,
             ]
                     
-            top_resols = predict_resolution(input, model) #'Desliga e volta a ligar', 0.56 
+            top_resols = predict_resolution(input, model)
 
             response_as_json = json.dumps({'status': 0,
                                            'equipamento': cli_info['equipamento'],
