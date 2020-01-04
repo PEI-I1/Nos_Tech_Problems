@@ -18,10 +18,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
-from keras.wrappers.scikit_learn import KerasClassifier
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Dropout
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dropout
 import pickle
 import joblib
 from timeit import default_timer as timer
@@ -138,8 +138,8 @@ def training_setup(data,original_dataset):
     features,target = target_selection(data,original_dataset)
     features_encoded,d = data_discretization(features,True)
     target_encoded,d_target = data_discretization(target,False)
-    save_dict(d,path + 'features_dict.joblib')
-    save_dict(d_target,path + 'target_dict.joblib')
+    save_dict(d,path + 'features_dict')
+    save_dict(d_target,path + 'target_dict')
 
     (training_inputs,testing_inputs,training_classes, testing_classes) = train_test_split(features_encoded, target_encoded , train_size=0.75, random_state=1)
     num_classes = len(target.unique())
@@ -453,4 +453,4 @@ num_classes = 0
 hyperparameter = False
 n_jobs_global = 1
 
-#dynamically_training(path_to_data='PEI_NOS_DATA.csv',path_to_output="./",plots=False,original_dataset=True,hyperparameter_tuning = False,n_jobs=2)
+#dynamically_training(path_to_data='problems_log.csv',path_to_output="./new_model/",plots=False,original_dataset=False,hyperparameter_tuning = False,n_jobs=2)
