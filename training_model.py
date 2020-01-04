@@ -95,15 +95,19 @@ def clean_originaldata(data):
     return data
 
 
-def target_selection(data) :
+def target_selection(data,original_dataset) :
     """ Separates features from target
     :param: Dataframe
     :return: Features pandas.Dataframe
     :return: Target pandas.Series
     """ 
-    data = data[['Sintoma','Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3','Equipamento_Tipo','Servico','Tarifario','Contexto_Saida' ]]
-    features = data[data.columns.difference(['Contexto_Saida'])]
-    target = data['Contexto_Saida']
+    if original_dataset :
+        target_name = 'Contexto_Saida'
+    else :
+        target_name = 'Sugestão'
+    data = data[['Sintoma','Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3','Equipamento_Tipo','Servico','Tarifario',target_name ]]
+    features = data[data.columns.difference([target_name])]
+    target = data[target_name]
     return features,target
 
 def data_discretization(data_to_encode,multilplecolumns=True):
@@ -120,7 +124,7 @@ def data_discretization(data_to_encode,multilplecolumns=True):
         encoded =  d['target'].fit_transform(data_to_encode)
     return encoded,d
 
-def training_setup(data):
+def training_setup(data,original_dataset):
     """ Setup training and testing data, including discretization , also saves dictionarys of discretization
     :param: Fataframe to setup
     :return: Features data for training
@@ -131,7 +135,7 @@ def training_setup(data):
     :return: Target encoded
     :return: Number of different classes in target
     """
-    features,target = target_selection(data)
+    features,target = target_selection(data,original_dataset)
     features_encoded,d = data_discretization(features,True)
     target_encoded,d_target = data_discretization(target,False)
     save_dict(d,path + 'features_dict.joblib')
@@ -416,7 +420,7 @@ def dynamically_training(path_to_data,path_to_output,plots=False,original_datase
     if original_dataset :
         data = clean_originaldata(data)
     data.dropna(inplace=True)
-    training_inputs,testing_inputs,training_classes, testing_classes, features_encoded , target_encoded, num_classes = training_setup(data)
+    training_inputs,testing_inputs,training_classes, testing_classes, features_encoded , target_encoded, num_classes = training_setup(data,original_dataset)
     if plots :
          target_distribution_plot(training_classes,testing_classes)
     models = {
