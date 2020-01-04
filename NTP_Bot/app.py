@@ -98,11 +98,8 @@ def solve():
                     save_on_redis = False
                     
                     # write to log file of problems
-                    save_to_log(exec_state, 1)
+                    save_to_log(exec_state)
                 else: # problem has not been resolved
-                    # write to log file of problems
-                    save_to_log(exec_state, 0)
-
                     if len(exec_state.suggestions) > exec_state.suggestion_count + 1: # there are still more suggestions to make
                         exec_state.suggestion_count = exec_state.suggestion_count + 1
                         new_suggestion = exec_state.suggestions[exec_state.suggestion_count]['prediction']
@@ -140,14 +137,13 @@ def solve():
     )
 
 
-def save_to_log(exec_state, success):
+def save_to_log(exec_state):
     ''' Save problems received and suggestions made
     :param: execution state of conversation
-    :param: if the suggestion made resolved the problem or not
     '''
     log = open(settings.FILENAME, "a")
 
-    resp_array = [None] * 9
+    resp_array = [None] * 8
     # Serviço
     resp_array[0] = exec_state.service
     # Equipamento
@@ -162,13 +158,21 @@ def save_to_log(exec_state, success):
     resp_array[6] = exec_state.model_args['Tipificacao_Nivel_3'][0]
     # Sugestão
     resp_array[7] = exec_state.suggestion
-    # Resolveu o problema?
-    resp_array[8] = 'sim' if success else 'não'
 
-    log.write(','.join(resp_array) + '\n')
+    log.write(';'.join(resp_array) + '\n')
+    log.close()
 
 
 if __name__ == '__main__':
+    # start csv file
+    log = open(settings.FILENAME, "w")
+    log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Sugestão\n')
+    log.close()
+
+    # redis connection
     redis_db = redis.Redis(host='127.0.0.1', port=6379, db=0)
+    
+    # load model for sentences similarity
     msg_interpreter.loadModelData()
+
     app.run(host='0.0.0.0', port=5000, threaded=True)
