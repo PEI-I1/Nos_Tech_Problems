@@ -166,7 +166,7 @@ def save_to_log(exec_state):
 if __name__ == '__main__':
     # start csv file
     log = open(settings.FILENAME, "w")
-    log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Sugestão\n')
+    log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Contexto_Saida\n')
     log.close()
 
     # redis connection

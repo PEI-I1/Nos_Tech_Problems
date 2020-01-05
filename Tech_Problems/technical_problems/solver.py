@@ -30,13 +30,24 @@ def target_decoded(target):
     target_decoded =  d_target['target'].inverse_transform(target)
     return target_decoded
 
+def best_n_suggestions(probs,n=3):
+    dic = dict(enumerate(probs.flatten(), 0))
+    sorted_dict = sorted(dic.items(), key=lambda item: item[1])
+    best_suggests= []
+    best_suggests_probs =[]
+    i=1
+    while i<=n:
+        new_prob = sorted_dict[len(sorted_dict)-i][1]
+        if new_prob > 0 :
+            best_suggests.append(sorted_dict[len(sorted_dict)-i][0])
+            best_suggests_probs.append(new_prob)
+        i+=1
+    return best_suggests,best_suggests_probs
+
 def predict_resolution(inputList,model):
     newInput = [ inputList ]
     input_encoded = encoding(newInput)
     input_encoded = input_encoded.values.tolist()
-    
-    ynew = model.predict(input_encoded)
-    top_ynew = target_decoded(ynew)[:3]
-    probs = model.predict_proba(input_encoded)
-    top_probs = np.sort(probs[0])[-len(top_ynew):][::-1]
-    return list(zip(top_ynew,top_probs))
+    probs = model.predict_proba(input_encoded)[0]
+    suggests,probs = best_n_suggestions(model.predict_proba(input_encoded) , 3)
+    return list(zip(suggests,probs))
