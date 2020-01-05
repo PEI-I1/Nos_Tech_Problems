@@ -461,7 +461,7 @@ def dynamically_training(path_Nos_originaldata, path_stored_new_data, path_lates
          target_distribution_plot(training_classes,testing_classes)
     models = {
         DecisionTreeClassifier(random_state=1) : 0,
-        #svm.SVC(kernel='linear', C=1.0) : 0 ,
+        svm.SVC(kernel='linear', C=1.0) : 0 ,
         KNeighbors (training_inputs,testing_inputs,training_classes, testing_classes) : 0 ,
         MultinomialNB() : 0 ,
         rf_hyper( features_encoded , target_encoded) : 0,
