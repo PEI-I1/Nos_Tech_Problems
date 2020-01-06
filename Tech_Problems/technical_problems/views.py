@@ -1,12 +1,10 @@
 from django.http import HttpResponse
 from django.db import IntegrityError
 from . import cli_manager as cm
-from .solver import load_model, predict_resolution
+from .solver import predict_resolution, update_models_data
 import json, os
 from .models import Equipamento_Tipo
 from django.contrib.auth.decorators import login_required
-
-model = load_model(os.getcwd() + '/technical_problems/model_files/model')
 
 def login(request):
     ''' Log a user(client) in the system
@@ -87,7 +85,7 @@ def solve(request):
                 tip_3,
             ]
                     
-            prediction,probability = predict_resolution(input, model) #'Desliga e volta a ligar', 0.56 
+            top_resols = predict_resolution(input)
 
             response_as_json = json.dumps({'status': 0,
                                            'res': {
@@ -102,3 +100,15 @@ def solve(request):
 
     print(response_as_json)
     return HttpResponse(response_as_json, content_type='json')
+
+
+def receive_csv(request):
+    ''' Receive log of problems solved on NTP_Bot to improve the model
+    '''
+    if request.method == 'POST':
+        csv = request.FILES['problems_log']
+        update_models_data(csv)
+
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=405)

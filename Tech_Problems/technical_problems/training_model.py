@@ -1,4 +1,5 @@
 import sys
+import os
 import pandas as pd
 import numpy as np
 import re
@@ -25,6 +26,38 @@ from tensorflow.keras.layers import Dropout
 import pickle
 import joblib
 from timeit import default_timer as timer
+
+def store_new_data(path_stored_new_data,path_latest_data) :
+    """ Store new data into csv from bot users
+    :param: Path to csv file of stored data from bot users
+    :param: Path to csv file of new data from latest interations with bot
+    :return: Pandas dataframe of the concatenated data
+    """  
+    latest_data = pd.read_csv(path_latest_data, sep=';', na_values=['NaN'],encoding='utf8',index_col=False)
+    print("Latest data shape: " + str(latest_data.shape))
+    if os.path.isfile(path_stored_new_data) :
+        stored_data = pd.read_csv(path_stored_new_data, sep=';', na_values=['NaN'],encoding='utf8',index_col=False)
+        print("Stored data shape: " + str(stored_data.shape))
+        final_data = pd.concat([stored_data,latest_data],ignore_index=True,sort=False).reset_index(drop=True)
+    else :
+        print("No stored data found!!!")
+        final_data = latest_data
+    
+
+    export_csv = final_data.to_csv(path_stored_new_data, index = None, header=True,sep=';')
+    final_data = final_data.reset_index(drop=True)
+
+
+    return final_data
+
+def old_new_data_fusion(original_data,new_data) :
+    print("Original Nos data shape: " + str(original_data.shape))
+    print("Stored data + new data from bot   shape : " + str(new_data.shape))
+    final_data = pd.concat([original_data,new_data],ignore_index=True,sort=False).reset_index(drop=True)
+    print("Merge data shape: " + str(final_data.shape))
+    final_data.dropna(inplace=True)
+    print("Merge data shape after dropna: " + str(final_data.shape))
+    return final_data
 
 def load_data(filename):
     """ Get dataframe from csv file
@@ -92,22 +125,19 @@ def clean_originaldata(data):
     value_counts = data['Contexto_Saida'].value_counts()
     to_remove = value_counts[value_counts <= threshold].index
     data['Contexto_Saida'].replace(to_remove,'linhas apoio', inplace=True)
+    data = data[['Sintoma','Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3','Equipamento_Tipo','Servico','Tarifario','Contexto_Saida' ]]
     return data
 
 
-def target_selection(data,original_dataset) :
+def target_selection(data) :
     """ Separates features from target
     :param: Dataframe
     :return: Features pandas.Dataframe
     :return: Target pandas.Series
     """ 
-    if original_dataset :
-        target_name = 'Contexto_Saida'
-    else :
-        target_name = 'Sugestão'
-    data = data[['Sintoma','Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3','Equipamento_Tipo','Servico','Tarifario',target_name ]]
-    features = data[data.columns.difference([target_name])]
-    target = data[target_name]
+    data = data[['Sintoma','Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3','Equipamento_Tipo','Servico','Tarifario','Contexto_Saida' ]]
+    features = data[data.columns.difference(['Contexto_Saida'])]
+    target = data['Contexto_Saida']
     return features,target
 
 def data_discretization(data_to_encode,multilplecolumns=True):
@@ -124,7 +154,7 @@ def data_discretization(data_to_encode,multilplecolumns=True):
         encoded =  d['target'].fit_transform(data_to_encode)
     return encoded,d
 
-def training_setup(data,original_dataset):
+def training_setup(data):
     """ Setup training and testing data, including discretization , also saves dictionarys of discretization
     :param: Fataframe to setup
     :return: Features data for training
@@ -135,7 +165,7 @@ def training_setup(data,original_dataset):
     :return: Target encoded
     :return: Number of different classes in target
     """
-    features,target = target_selection(data,original_dataset)
+    features,target = target_selection(data)
     features_encoded,d = data_discretization(features,True)
     target_encoded,d_target = data_discretization(target,False)
     save_dict(d,path + 'features_dict')
@@ -402,12 +432,13 @@ def save_dict(dict_encoder, filename) :
     """
     joblib.dump(dict_encoder,filename)
 
-def dynamically_training(path_to_data,path_to_output,plots=False,original_dataset=False,hyperparameter_tuning = False,n_jobs=1) : 
+def dynamically_training(path_Nos_originaldata, path_stored_new_data, path_latest_data ,path_to_output, plots=False,hyperparameter_tuning = False,n_jobs=1) : 
     """ Executing everything needed to load, clean, test , train, evalutate models, and choose the best to save
-    :param: Path to dataset in csv with the data required to train the classifier
+    :param: Path to dataset in csv with the original data from nos
+    :param: Path to dataset in csv with the stored data from our bot old interations, its created if doesnt exist
+    :param: Path to dataset in csv with the latest data given by users of our bot
     :param: Path to where we want to store the final model and dictionarys
     :param: Boolean indicating if we want to see plots of distribution of classes
-    :param: Boolean indicating if the dataset given is the original csv dataset from Nos, false if its the new data originated by our bot
     :param: Boolean indicating if we want hyperparameter tuning of models, which can require several hours
     :param: The number of jobs to run in parallel, -1 means using all processors
     """
@@ -415,17 +446,22 @@ def dynamically_training(path_to_data,path_to_output,plots=False,original_datase
     n_jobs_global=n_jobs
     start = timer()
     hyperparameter = hyperparameter_tuning
-    path = path_to_output 
-    data = load_data(path_to_data)
-    if original_dataset :
-        data = clean_originaldata(data)
-    data.dropna(inplace=True)
-    training_inputs,testing_inputs,training_classes, testing_classes, features_encoded , target_encoded, num_classes = training_setup(data,original_dataset)
+    path = path_to_output
+
+    new_data = store_new_data(path_stored_new_data,path_latest_data)
+    
+    original_data = load_data(path_Nos_originaldata)
+    original_data = clean_originaldata(original_data)
+    original_data.dropna(inplace=True)
+
+    data = old_new_data_fusion(original_data,new_data)
+
+    training_inputs,testing_inputs,training_classes, testing_classes, features_encoded , target_encoded, num_classes = training_setup(data)
     if plots :
          target_distribution_plot(training_classes,testing_classes)
     models = {
         DecisionTreeClassifier(random_state=1) : 0,
-        #svm.SVC(kernel='linear', C=1.0) : 0 ,
+        svm.SVC(kernel='linear', C=1.0) : 0 ,
         KNeighbors (training_inputs,testing_inputs,training_classes, testing_classes) : 0 ,
         MultinomialNB() : 0 ,
         rf_hyper( features_encoded , target_encoded) : 0,
@@ -453,4 +489,4 @@ num_classes = 0
 hyperparameter = False
 n_jobs_global = 1
 
-#dynamically_training(path_to_data='problems_log.csv',path_to_output="./new_model/",plots=False,original_dataset=False,hyperparameter_tuning = False,n_jobs=2)
+#dynamically_training(path_Nos_originaldata='PEI_NOS_DATA.csv', path_stored_new_data='stored.csv'  ,path_latest_data='log.csv',path_to_output="./",plots=False, hyperparameter_tuning = False,n_jobs=2)

@@ -2,7 +2,12 @@ import base64, json, pickle, redis
 import settings
 import msg_interpreter
 import ids
+import requests
 from flask import Flask, request
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 app = Flask(__name__)
 
@@ -68,7 +73,52 @@ def solve():
     )
 
 
+def save_to_log(exec_state):
+    ''' Save problems received and suggestions made
+    :param: execution state of conversation
+    '''
+    log = open(settings.FILENAME, "a")
+
+    resp_array = [None] * 8
+    # Serviço
+    resp_array[0] = exec_state.service
+    # Equipamento
+    resp_array[1] = exec_state.equipment
+    # Tarifário
+    resp_array[2] = exec_state.tariff
+    # Sintoma
+    resp_array[3] = exec_state.model_args['Sintoma'][0]
+    # Tipificações 1, 2 e 3
+    resp_array[4] = exec_state.model_args['Tipificacao_Nivel_1'][0]
+    resp_array[5] = exec_state.model_args['Tipificacao_Nivel_2'][0]
+    resp_array[6] = exec_state.model_args['Tipificacao_Nivel_3'][0]
+    # Sugestão
+    resp_array[7] = exec_state.suggestion
+
+    log.write(';'.join(resp_array) + '\n')
+    log.close()
+
+
+def upload_csv():
+    files = {'problems_log': open(settings.FILENAME, 'rb')}
+    r = requests.post(settings.SOLVER_ENDPOINT_UPDATE_LOG, files)
+    print(r)
+    
+
 if __name__ == '__main__':
+    # start csv file
+    log = open(settings.FILENAME, "w")
+    log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Contexto_Saida\n')
+    log.close()
+
+    # redis connection
     redis_db = redis.Redis(host='127.0.0.1', port=6379, db=0)
+    
+    # load model for sentences similarity
     msg_interpreter.loadModelData()
-    app.run(port=5000, threaded=True)
+
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(upload_csv, IntervalTrigger(minutes = 3))
+    scheduler.start()
+
+    app.run(host='0.0.0.0', port=5000, threaded=True)
