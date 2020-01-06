@@ -67,6 +67,39 @@ def register(uname, pwd, morada, equipamentos_tipo, tarifario):
         return 2
 
 
+def cli_has_service(uname, service):
+    ''' Check if a client has a specific service in his contract
+    :param: client username
+    :param: service to check
+    :return: True or False
+    '''
+    contract = Cliente.objects \
+                      .all() \
+                      .filter(user__username=uname) \
+                      .values_list('contrato', flat=True)
+
+    if contract:
+        address = contract[0]
+
+        services = Contrato.objects \
+                           .get(morada=address) \
+                           .servicos \
+                           .all() \
+                           .values_list('servico', flat=True)
+
+        if not services:
+            return False
+
+        else:
+            if service.lower() in services:
+                return True
+            else:
+                return False
+
+    else:
+        return False
+
+
 def get_cli_info(uname, service):
     ''' Fetch information regarding a contracted service
     :param: client username
@@ -103,4 +136,5 @@ def get_cli_info(uname, service):
     
     print(client_info)
     return client_info
+
 

@@ -9,15 +9,17 @@ def load_dict(filename) :
     label_encoder = joblib.load(filename)
     return label_encoder
 
+def load_model(filename):
+    model = pickle.load(open(filename, 'rb'))
+    return model
+
+
 model = load_model(os.getcwd() + '/technical_problems/model_files/model')
 d = load_dict(os.getcwd() + '/technical_problems/model_files/features_dict')
 d_target = load_dict(os.getcwd() + '/technical_problems/model_files/target_dict')
 
 columns = ['Equipamento_Tipo', 'Servico', 'Sintoma', 'Tarifario', 'Tipificacao_Nivel_1', 'Tipificacao_Nivel_2', 'Tipificacao_Nivel_3']
 
-def load_model(filename):
-    model = pickle.load(open(filename, 'rb'))
-    return model
 
 def encoding(inpArray):
     newInputDf = pd.DataFrame(inpArray , columns =columns) 
@@ -52,7 +54,8 @@ def predict_resolution(inputList):
     input_encoded = encoding(newInput)
     input_encoded = input_encoded.values.tolist()
     probs = model.predict_proba(input_encoded)[0]
-    suggests,probs = best_n_suggestions(model.predict_proba(input_encoded), 3)
+    #FIXME: return strings instead of integers in suggests
+    suggests,probs = best_n_suggestions(model.predict_proba(input_encoded), 3) 
     return list(zip(suggests,probs))
 
 def update_models_data(csv):

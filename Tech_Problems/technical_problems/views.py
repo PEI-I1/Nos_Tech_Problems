@@ -6,6 +6,19 @@ import json, os
 from .models import Equipamento_Tipo
 from django.contrib.auth.decorators import login_required
 
+
+def receive_csv(request):
+    ''' Receive log of problems solved on NTP_Bot to improve the model
+    '''
+    if request.method == 'POST':
+        csv = request.FILES['problems_log']
+        update_models_data(csv)
+
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=405)
+
+
 def login(request):
     ''' Log a user(client) in the system
     '''
@@ -33,6 +46,9 @@ def logout(request):
 
 
 def register(request):
+    ''' Register a new user/client in the database to allow
+    for technical assistance to be provided
+    '''
     uname = request.GET.get('username', '')
     pwd = request.GET.get('password', '')
     morada = request.GET.get('morada', '')
@@ -48,17 +64,38 @@ def register(request):
     return HttpResponse(response_as_json, content_type='json')
 
 
-# FIXME: uncomment in production
+@login_required
+def client_has_service(request):
+    ''' Check if a client has a specific service in his contract
+    '''
+    servico = request.GET.get('servico', '')
+    uname = request.user.username
+
+    if servico:
+        response = cm.cli_has_service(uname, servico)
+
+        response_as_json = json.dumps({
+            'has': response
+        })
+    else:
+        response_as_json = json.dumps({
+            'has': False
+        })
+
+    return HttpResponse(response_as_json, content_type='json')
+
+
 @login_required
 def solve(request):
+    ''' Provide a solution to the problem described by the input
+    parameters
+    '''
     sint = request.GET.get('sintoma', '')
     tip_1 = request.GET.get('tipificacao_tipo_1', '')
     tip_2 = request.GET.get('tipificacao_tipo_2', '')
     tip_3 = request.GET.get('tipificacao_tipo_3', '')
     servico = request.GET.get('servico', '')
-    #uname = request.GET.get('username', '') #FIXME: remove in production
     uname = request.user.username
-    print('username = ' + uname)
     
     cli_info = cm.get_cli_info(uname, servico)
     
@@ -88,27 +125,15 @@ def solve(request):
             top_resols = predict_resolution(input)
 
             response_as_json = json.dumps({'status': 0,
-                                           'res': {
-                                               'prediction': prediction,
-                                               'probability': probability
-                                           }})                    
+                                           'equipamento': cli_info['equipamento'],
+                                           'tarifario': cli_info['tarifario'],
+                                           'res': [{'prediction': pred, 'probability': prob} for pred,prob in top_resols]
+            })
     else:
         response_as_json = json.dumps({
             'status': 3,
             'error': 'Unexpected error'
         })
 
-    print(response_as_json)
     return HttpResponse(response_as_json, content_type='json')
 
-
-def receive_csv(request):
-    ''' Receive log of problems solved on NTP_Bot to improve the model
-    '''
-    if request.method == 'POST':
-        csv = request.FILES['problems_log']
-        update_models_data(csv)
-
-        return HttpResponse(status=200)
-    else:
-        return HttpResponse(status=405)

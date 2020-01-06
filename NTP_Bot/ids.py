@@ -22,12 +22,18 @@ class Inter_State:
         self.state = 0
         self.session = None
         self.service = ''
+        self.error_count = 0
         self.model_args = {
             'Sintoma': ('', 0.0),
             'Tipificacao_Nivel_1':  ('', 0.0),
             'Tipificacao_Nivel_2':  ('', 0.0),
             'Tipificacao_Nivel_3':  ('', 0.0)
         }
+        self.equipment = ''
+        self.tariff = ''
+        self.suggestions = ''
+        self.suggestion = ''
+        self.suggestion_count = 0
 
     def setupSession(self, uname, pwd):
         ''' Sets up an HTTP session with the solver backend
@@ -78,8 +84,13 @@ class Inter_State:
         print(solver_json)
 
         status = solver_json['status']
+        self.equipment = solver_json['equipamento']
+        self.tariff = solver_json['tarifario']
+        self.suggestions = solver_json['res']
+        print(self.suggestions)
         if status == 0: # Success
-            return 1, solver_json['res']['prediction']
+            self.suggestion = self.suggestions[self.suggestion_count]['prediction']
+            return 1, self.suggestion
         elif status == 1:
             return 0, 'Não existe informação de algum equipamento seu com serviço de ' + self.service + '.'
         elif status == 2:
@@ -101,7 +112,8 @@ class Inter_State:
             cs = cs[input_arg]
             search_space = [search_tree for search_tree in cs]
             mt, prob = msg_interpreter.extractProblemData(prob_desc, search_space, 0)
-            if prob < 0.0: #FIXME: change threshold to 0.65
+            if prob < 0.65: #FIXME: change threshold to 0.65
+                #print(self.model_args)
                 return False
             elif prob > self.model_args[input_arg][1]:
                 self.model_args[input_arg] = (mt, prob)
@@ -109,4 +121,22 @@ class Inter_State:
             if input_arg != 'Tipificacao_Nivel_3':
                 cs = cs[mt]
 
+        #print(self.model_args)
         return True
+
+
+    def check_client_services(self, service): 
+        ''' Check if a client has a specific service in his contract
+        :param: service to check
+        :return: True or False
+        '''
+        checker = self.session.get(
+            settings.SOLVER_ENDPOINT_SERVICE_CHECK,
+            params={
+                'servico': service
+            }
+        )
+        checker_json = json.loads(checker.text)
+        #print(checker_json)
+        res = checker_json['has']
+        return res
