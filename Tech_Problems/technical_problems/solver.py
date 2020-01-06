@@ -54,9 +54,8 @@ def predict_resolution(inputList):
     input_encoded = encoding(newInput)
     input_encoded = input_encoded.values.tolist()
     probs = model.predict_proba(input_encoded)[0]
-    #FIXME: return strings instead of integers in suggests
     suggests,probs = best_n_suggestions(model.predict_proba(input_encoded), 3) 
-    return list(zip(suggests,probs))
+    return list(zip(target_decoded(suggests),probs))
 
 def update_models_data(csv):
     ''' Train model with new data and load model with updated files
