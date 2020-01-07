@@ -1,12 +1,29 @@
 from django.http import HttpResponse
 from django.db import IntegrityError
 from . import cli_manager as cm
-from .solver import load_model, predict_resolution
+from .solver import predict_resolution, update_models_data
 import json, os
+from multiprocessing import Process
 from .models import Equipamento_Tipo
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 
-model = load_model(os.getcwd() + '/technical_problems/model_files/model')
+
+#FIXME: 
+@csrf_exempt
+def receive_csv(request):
+    ''' Receive log of problems solved on NTP_Bot to improve the model
+    '''
+    if request.method == 'POST':
+        csv = request.FILES['problems_log']
+        #FIXME: implement using Celery task and check for result
+        p = Process(target=update_models_data, args=(csv,))
+        p.start()
+
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=405)
+
 
 def login(request):
     ''' Log a user(client) in the system
@@ -111,7 +128,7 @@ def solve(request):
                 tip_3,
             ]
                     
-            top_resols = predict_resolution(input, model)
+            top_resols = predict_resolution(input)
 
             response_as_json = json.dumps({'status': 0,
                                            'equipamento': cli_info['equipamento'],
@@ -125,3 +142,4 @@ def solve(request):
         })
 
     return HttpResponse(response_as_json, content_type='json')
+

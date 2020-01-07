@@ -2,7 +2,10 @@ import base64, json, pickle, os, redis
 import settings
 import msg_interpreter
 import ids
+import requests
 from flask import Flask, request
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 
 app = Flask(__name__)
 
@@ -127,9 +130,9 @@ def solve():
               'state': base64.encodebytes(pickle.dumps(exec_state)).decode()}
 
     if save_on_redis:
-        redis_db.set(chat_id, json.dumps(cs).encode())
+        redis_db.set(chat_id+'_ntp', json.dumps(cs).encode())
     else:
-        redis_db.delete(chat_id)
+        redis_db.delete(chat_id+'_ntp')
 
     return app.response_class(
         response=json.dumps(ret_dict),
@@ -162,7 +165,6 @@ def save_to_log(exec_state):
     log.write(';'.join(resp_array) + '\n')
     log.close()
 
-
 def loadSettings():
     ''' Loads default settings from env variables
     '''
@@ -172,9 +174,14 @@ def loadSettings():
     settings.SOLVER_ENDPOINT_LOGIN = settings.SOLVER_ENDPOINT_LOGIN.format(s_host, s_port)
     settings.SOLVER_ENDPOINT_SOLVE = settings.SOLVER_ENDPOINT_SOLVE.format(s_host, s_port)
     settings.SOLVER_ENDPOINT_SERVICE_CHECK = settings.SOLVER_ENDPOINT_SERVICE_CHECK.format(s_host, s_port)
+    settings.SOLVER_ENDPOINT_UPDATE_LOG = settings.SOLVER_ENDPOINT_UPDATE_LOG.format(s_host, s_port)
     settings.REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
     settings.REDIS_PORT = os.getenv('REDIS_PORT', 6379)
     
+def upload_csv():
+    files = {'problems_log': open(settings.FILENAME, 'rb')}
+    r = requests.post(settings.SOLVER_ENDPOINT_UPDATE_LOG, files=files)
+ 
 
 if __name__ == '__main__':
     # start csv file
@@ -183,11 +190,15 @@ if __name__ == '__main__':
     log.close()
 
     loadSettings()
-
+    
     # redis connection
     redis_db = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
     
     # load model for sentences similarity
     msg_interpreter.loadModelData()
+
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(upload_csv, IntervalTrigger(minutes = 1))
+    scheduler.start()
 
     app.run(host='0.0.0.0', port=5000, threaded=True)
