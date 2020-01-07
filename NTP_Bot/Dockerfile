@@ -22,11 +22,11 @@ USER solver
 WORKDIR /home/solver
 RUN python3.7 -m pip install pip
 
-COPY . NTP_Bot
+COPY --chown=solver . NTP_Bot
 WORKDIR /home/solver/NTP_Bot
 
 RUN echo 'PATH=$PATH:/home/solver/.local/bin' >> ../.bashrc
 
 RUN python3.7 -m pip install -r requirements.txt --user
 
-WORKDIR /home/solver
+CMD ["python3.7", "app.py"] 

@@ -1,13 +1,9 @@
-FROM ubuntu:latest
+FROM python:3.7
 MAINTAINER PEI-i1
 
 RUN apt-get update && apt-get install -y --force-yes \
     bc \
     curl \
-    git \
-    python3.7 \
-    python3-pip \
-    sudo \
     unzip \
     wget \
     vim
@@ -19,13 +15,16 @@ RUN echo 'solver:solver' | chpasswd
 USER solver
 
 WORKDIR /home/solver
-RUN python3.7 -m pip install pip
 
-COPY . Tech_Problems
+COPY --chown=solver . Tech_Problems
 WORKDIR /home/solver/Tech_Problems
 
-RUN echo 'PATH=$PATH:/home/solver/.local/bin' >> ../.bashrc
+ENV PATH="/home/solver/.local/bin:${PATH}"
 
 RUN python3.7 -m pip install -r requirements.txt --user
 
-WORKDIR /home/solver
+CMD ./manage.py makemigrations && \
+    ./manage.py migrate && \
+    ./manage.py flush --no-input && \
+    ./manage.py loaddata fixture.json && \
+    ./manage.py runserver 0.0.0.0:5005
