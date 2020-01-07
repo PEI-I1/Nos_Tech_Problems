@@ -7,9 +7,6 @@ SECRET_KEY = ')!lb4$ln(6_mkd)^qrf#xw%6^^gtbjo2syjlz)=)tkrt!d9@il'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '0.0.0.0',
     'nostechproblems'
 ]
 

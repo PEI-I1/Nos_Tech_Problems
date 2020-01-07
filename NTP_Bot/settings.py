@@ -13,9 +13,11 @@ UPROMPT = [
     'Não tem esse tipo de serviço contratado. Por favor tente novamente.'
 ]
 
-SOLVER_ENDPOINT = 'http://127.0.0.1:8000/problems/'
+SOLVER_ENDPOINT = 'http://{}:{}/problems/'
 SOLVER_ENDPOINT_LOGIN = SOLVER_ENDPOINT + 'login'
 SOLVER_ENDPOINT_SOLVE = SOLVER_ENDPOINT + 'solve'
 SOLVER_ENDPOINT_SERVICE_CHECK = SOLVER_ENDPOINT + 'client_has_service'
+REDIS_HOST=''
+REDIS_PORT=0
 MAX_ERROR_COUNT = 3
 FILENAME = 'problems_log.csv'

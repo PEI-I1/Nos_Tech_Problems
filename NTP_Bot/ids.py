@@ -70,7 +70,7 @@ class Inter_State:
         tip_3 = self.model_args['Tipificacao_Nivel_3'][0]
 
         solver = self.session.get(
-            settings.SOLVER_ENDPOINT_SOLVE,
+            settings.SOLVER_ENDPOINT_SOLVE.format(settings.SOLVER_PORT),
             params={
                 'sintoma': sintoma,
                 'tipificacao_tipo_1': tip_1,
