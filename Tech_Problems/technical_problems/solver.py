@@ -57,6 +57,7 @@ def predict_resolution(inputList):
     suggests,probs = best_n_suggestions(model.predict_proba(input_encoded), 3) 
     return list(zip(target_decoded(suggests),probs))
 
+
 def update_models_data(csv):
     ''' Train model with new data and load model with updated files
     :param: django UploadedFile handle

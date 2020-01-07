@@ -167,8 +167,7 @@ def save_to_log(exec_state):
 
 def upload_csv():
     files = {'problems_log': open(settings.FILENAME, 'rb')}
-    r = requests.post(settings.SOLVER_ENDPOINT_UPDATE_LOG, files)
-    print(r)
+    r = requests.post(settings.SOLVER_ENDPOINT_UPDATE_LOG, files=files)
  
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 keywords = {
-    "common": {
+    'common': {
         'equipamento': [r'box', r'router', r'televisão', r'telefone', r'tv', r'internet'],
         'wireless': [r'wifi', r'internet', r'rede', r' net', r'ligação'],
         'ruído': [r'barulhento', r'barulhenta'],
@@ -16,13 +16,13 @@ keywords = {
         'chamada': [r'(\b|^)ligar(\b|$)'],
         'quebras': [r'falha(s|r)'],
     },
-    "tip_1":{
+    'tip_1':{
         'internet': [r'wifi', r'net', r'rede', r'wireless', r'ethernet'],
         'gravação': [r'gravar'],
         'guia': [r'menu', r'opç(ão|ões)'],
         'restart': [r'reiniciar', r'ligar? e desligar?']
     },
-    "tip_2":{
+    'tip_2':{
         'imagem/áudio': [r'(\b|^)som(\b|$)', r'áudio', r'imagem', r'cana(l|is)'],
         'visualizar': [r'(\b|^)ver(\b|$)', r'(\b|^)vejo(\b|$)'],
         'áudio': [r'(\b|^)som(\b|$)'],
@@ -33,7 +33,7 @@ keywords = {
         'intermitência': [r'interrupç(ão|ões)', r'(\b|^)com paragens(\b|$)', r'(\b|^)a parar(\b|$)'],
         'internacional': [r'estrangeiro', r'(\b|^)lá para fora(\b|$)', r'(\b|^)fora(\b|$)']
     },
-    "tip_3":{
+    'tip_3':{
         'software': [r'programas?', r'sistema'],
         'avaria': [r'estragado', r'(\b|^)não (está a )?funcionar?(\b|$)'],
         'esporádico': [r'de vez em quando', r'às vezes'],

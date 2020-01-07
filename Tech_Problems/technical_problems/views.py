@@ -3,16 +3,21 @@ from django.db import IntegrityError
 from . import cli_manager as cm
 from .solver import predict_resolution, update_models_data
 import json, os
+from multiprocessing import Process
 from .models import Equipamento_Tipo
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 
 
+@csrf_exempt
 def receive_csv(request):
     ''' Receive log of problems solved on NTP_Bot to improve the model
     '''
     if request.method == 'POST':
         csv = request.FILES['problems_log']
-        update_models_data(csv)
+        #FIXME: implement using Celery task and check for result
+        p = Process(target=update_models_data, args=(csv,))
+        p.start()
 
         return HttpResponse(status=200)
     else:
