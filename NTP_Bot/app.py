@@ -17,7 +17,7 @@ def solve():
     msg = data['msg']
     
     ret_dict = {'chat_id': chat_id, 'msg': ''}
-    csr = redis_db.get(chat_id)
+    csr = redis_db.get(chat_id+ '_ntp')
 
     save_on_redis = True
 
@@ -202,4 +202,4 @@ if __name__ == '__main__':
     scheduler.add_job(upload_csv, 'cron', hour=4, minute=0)
     scheduler.start()
 
-    app.run(host='0.0.0.0', port=5000, threaded=True)
+    app.run(host='0.0.0.0', port=5004, threaded=True)
