@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import base64, json, pickle, os, redis
 import settings
 import msg_interpreter
