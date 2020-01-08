@@ -1,14 +1,9 @@
-FROM ubuntu:latest
+FROM python:3.7
 MAINTAINER PEI-i1
 
 RUN apt-get update && apt-get install -y --force-yes \
     bc \
     curl \
-    git \
-    python3.7 \
-    python3-pip \
-    redis \
-    sudo \
     unzip \
     wget \
     vim
@@ -20,13 +15,12 @@ RUN echo 'solver:solver' | chpasswd
 USER solver
 
 WORKDIR /home/solver
-RUN python3.7 -m pip install pip
 
 COPY --chown=solver . NTP_Bot
 WORKDIR /home/solver/NTP_Bot
 
-RUN echo 'PATH=$PATH:/home/solver/.local/bin' >> ../.bashrc
+ENV PATH="/home/solver/.local/bin:${PATH}"
 
 RUN python3.7 -m pip install -r requirements.txt --user
 
-CMD ["./app.py"] 
+CMD ./app.py
