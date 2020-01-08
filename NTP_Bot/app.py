@@ -198,7 +198,7 @@ if __name__ == '__main__':
     msg_interpreter.loadModelData()
 
     scheduler = BackgroundScheduler()
-    scheduler.add_job(upload_csv, IntervalTrigger(minutes = 1))
+    scheduler.add_job(upload_csv, 'cron', hour=4, minute=0)
     scheduler.start()
 
     app.run(host='0.0.0.0', port=5000, threaded=True)
