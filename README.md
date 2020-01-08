@@ -38,9 +38,9 @@ system:
 ![NOS\_Tech\_Problems Overview](static/NTP_Overview.png)
 
 ### API
-The only public API endpoint provided by the NOS Tech Problems microservice that is 
-exposed by the [NTP Bot](NTP_Bot) however, the following list includes the endpoints made
-available by the [Tech Problems module](Tech_Problems) to facilitate future development.
+The only public API endpoint provided by the NOS Tech Problems microservice is the one 
+exposed by the [NTP Bot](NTP_Bot) however, the following list also includes the endpoints made
+available by the [Tech Problems module](Tech_Problems) to ease future development.
 
 #### NTP Bot
 <details>
