@@ -15,9 +15,9 @@ def solve():
     data = request.get_json()
     chat_id = data['idChat']
     msg = data['msg']
-    
     ret_dict = {'chat_id': chat_id, 'msg': ''}
-    csr = redis_db.get(chat_id+ '_ntp')
+    redis_cli_key = str(chat_id) + '_ntp'
+    csr = redis_db.get(redis_cli_key)
 
     save_on_redis = True
 
@@ -131,9 +131,9 @@ def solve():
               'state': base64.encodebytes(pickle.dumps(exec_state)).decode()}
 
     if save_on_redis:
-        redis_db.set(chat_id+'_ntp', json.dumps(cs).encode())
+        redis_db.set(redis_cli_key, json.dumps(cs).encode())
     else:
-        redis_db.delete(chat_id+'_ntp')
+        redis_db.delete(redis_cli_key)
 
     return app.response_class(
         response=json.dumps(ret_dict),
