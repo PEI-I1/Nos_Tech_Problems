@@ -17,13 +17,51 @@ with a machine learning backend to provide technical assistance to users. By tak
 of past user interactions, whether with real/human assistants or with the bot module itself, it
 improves the model's ability to provide accurate solutions to users problems.
 
-### Features
-
-
 ## Usage
+
 ### Development Setup
 
+#### Tech Problems
+* Make sure you have `database_population.json` inside `static` folder.
+* Change directory:
+`cd Tech_Problems`
+* Create a directory for the model necessary files:
+`mkdir technical_problems/model_files/`
+* Move your model files to that folder.
+* Install *Django* dependencies:
+`pip install -r requirements.txt --user`
+* Create & migrate DB
+```
+./manage.py makemigrations
+./manage.py migrate
+```
+* Import static data:
+`./manage.py loaddata ../static/database_population.json`
+* Run *Django* project:
+`./manage.py runserver`
+
+#### NTP_Bot
+
+* Change directory:
+`cd NTP_Bot`
+* Install bot dependencies:
+`pip install -r requirements.txt --user`
+* Run the application:
+`./app.py`
+
 ### Deployment
+
+* Install Docker
+* Pull `Tech_Problems` and `NTP_Bot`containers: 
+```
+docker pull pei1/nos_tech_problems:tech_problems
+docker pull pei1/nos_tech_problems:ntp_bot
+```
+* Run both containers
+```
+docker run -p 5005:5005 pei1/nos_tech_problems:tech_problems
+docker run -p 5004:5004 pei1/nos_tech_problems:ntp_bot
+```
 
 
 ## Architecture
