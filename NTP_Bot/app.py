@@ -182,8 +182,9 @@ if __name__ == '__main__':
     # load model for sentences similarity
     msg_interpreter.loadModelData()
 
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(upload_csv, IntervalTrigger(minutes = 1))
-    scheduler.start()
+    # TODO remove comments and define when to do it
+    #scheduler = BackgroundScheduler()
+    #scheduler.add_job(upload_csv, IntervalTrigger(minutes = 1))
+    #scheduler.start()
 
     app.run(host='0.0.0.0', port=5000, threaded=True)
