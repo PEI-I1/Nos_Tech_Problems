@@ -184,8 +184,11 @@ def upload_csv():
 
 if __name__ == '__main__':
     # start csv file if necessary
-    with open(settings.FILENAME) as f:
-        lines = len(f.readlines())
+    try:
+        with open(settings.FILENAME) as f:
+            lines = len(f.readlines())
+    except FileNotFoundError: # csv don't exist
+        lines = 0
     if not lines:
         log = open(settings.FILENAME, "w")
         log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Contexto_Saida\n')
