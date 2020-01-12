@@ -5,7 +5,7 @@ import ids
 import requests
 from flask import Flask, request
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 
 app = Flask(__name__)
 
@@ -165,16 +165,31 @@ def save_to_log(exec_state):
     log.write(';'.join(resp_array) + '\n')
     log.close()
 
+
 def upload_csv():
-    files = {'problems_log': open(settings.FILENAME, 'rb')}
-    r = requests.post(settings.SOLVER_ENDPOINT_UPDATE_LOG, files=files)
+    ''' Upload csv file to Tech_Problems
+    '''
+    with open(settings.FILENAME) as f:
+        lines = len(f.readlines()) - 1
+
+    if lines > settings.LOG_MIN_NUMBER_LINES:
+        files = {'problems_log': open(settings.FILENAME, 'rb')}
+        r = requests.post(settings.SOLVER_ENDPOINT_UPDATE_LOG, files=files)
+        
+        if (r.status_code == 200):
+            log = open(settings.FILENAME, "w")
+            log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Contexto_Saida\n')
+            log.close()
  
 
 if __name__ == '__main__':
-    # start csv file
-    log = open(settings.FILENAME, "w")
-    log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Contexto_Saida\n')
-    log.close()
+    # start csv file if necessary
+    with open(settings.FILENAME) as f:
+        lines = len(f.readlines())
+    if not lines:
+        log = open(settings.FILENAME, "w")
+        log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Contexto_Saida\n')
+        log.close()
 
     # redis connection
     redis_db = redis.Redis(host='127.0.0.1', port=6379, db=0)
@@ -182,9 +197,9 @@ if __name__ == '__main__':
     # load model for sentences similarity
     msg_interpreter.loadModelData()
 
-    # TODO remove comments and define when to do it
-    #scheduler = BackgroundScheduler()
-    #scheduler.add_job(upload_csv, IntervalTrigger(minutes = 1))
-    #scheduler.start()
+    # add scheduler to train model
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(upload_csv, CronTrigger(hour=3)) # every day at 3AM
+    scheduler.start()
 
     app.run(host='0.0.0.0', port=5000, threaded=True)
