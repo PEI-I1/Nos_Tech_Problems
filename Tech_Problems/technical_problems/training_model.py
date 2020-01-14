@@ -214,6 +214,35 @@ def target_distribution_plot(training_classes,testing_classes):
     plt.ylabel('Frequency')
     plt.show()
 
+def influence_number_samples_plot (data) :
+
+    features,target = target_selection(data)
+    features_encoded,d = data_discretization(features,True)
+    target_encoded,d_target = data_discretization(target,False)
+
+    n_samples_score = []
+    n_sizes = np.arange(4000,68000,4000)
+    for n in n_sizes:
+        train_size = int ( n * 0.75)
+        test_size =  int (n * 0.25)
+        (training_inputs,testing_inputs,training_classes, testing_classes) = train_test_split(features_encoded, target_encoded , train_size=train_size , test_size=test_size, random_state=1)
+        
+        rf = RandomForestClassifier(n_estimators=10, random_state=1)
+        rf.fit(training_inputs, training_classes)
+        score = rf.score(testing_inputs, testing_classes)
+        n_samples_score.append(score)
+    n_samples_score = np.array (n_samples_score)
+    print(n_sizes.size)
+    print(n_samples_score.size)
+    print(n_sizes)
+    print(n_samples_score)
+    fig, ax = plt.subplots()
+    ax.plot(n_sizes, n_samples_score)
+    ax.set(xlabel='Number of samples in training', ylabel='Accuracy',
+        title='Number os samples influence')
+    ax.grid()
+    plt.show()
+
 def grid_search(X, y, nfolds,param_grid,model):
     """ Auxiliary method to implement grid search algoritm for hyperparameter tuning 
     :param: Features
@@ -461,6 +490,7 @@ def dynamically_training(path_Nos_originaldata, path_stored_new_data, path_lates
     training_inputs,testing_inputs,training_classes, testing_classes, features_encoded , target_encoded, num_classes = training_setup(data)
     if plots :
          target_distribution_plot(training_classes,testing_classes)
+         influence_number_samples_plot (data)
     models = {
         DecisionTreeClassifier(random_state=1) : 0,
         svm.SVC(kernel='linear', C=1.0) : 0 ,
@@ -494,4 +524,4 @@ n_jobs_global = 1
 
 
 
-#dynamically_training(path_Nos_originaldata='PEI_NOS_DATA.csv', path_stored_new_data='stored.csv'  ,path_latest_data='log.csv',path_to_output="./",plots=False, hyperparameter_tuning = False,n_jobs=2)
+#dynamically_training(path_Nos_originaldata='PEI_NOS_DATA.csv', path_stored_new_data='stored.csv'  ,path_latest_data='log.csv',path_to_output="./",plots=True, hyperparameter_tuning = False,n_jobs=2)
