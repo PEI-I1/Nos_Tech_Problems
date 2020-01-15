@@ -217,9 +217,6 @@ if __name__ == '__main__':
     msg_interpreter.loadModelData()
 
     scheduler = BackgroundScheduler()
-    scheduler.add_job(upload_csv, 'cron', hour=4, minute=0)
-    scheduler.start()
-
     scheduler.add_job(upload_csv, CronTrigger(hour=3)) # every day at 3AM
     scheduler.start()
 
