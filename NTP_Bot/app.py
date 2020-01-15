@@ -17,6 +17,7 @@ def solve():
     msg = data['msg']
     
     ret_dict = {'chat_id': chat_id, 'msg': ''}
+    chat_id = str(chat_id) + '_redis'
     csr = redis_db.get(chat_id)
 
     save_on_redis = True
@@ -139,6 +140,8 @@ def solve():
         response=json.dumps(ret_dict),
         mimetype='application/json'
     )
+
+
 
 
 def save_to_log(exec_state):
