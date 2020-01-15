@@ -112,7 +112,7 @@ class Inter_State:
             cs = cs[input_arg]
             search_space = [search_tree for search_tree in cs]
             mt, prob = msg_interpreter.extractProblemData(prob_desc, search_space, 0)
-            if prob < 0.65: #FIXME: change threshold to 0.65
+            if prob < 0.4:
                 #print(self.model_args)
                 return False
             elif prob > self.model_args[input_arg][1]:
