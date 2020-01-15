@@ -521,7 +521,3 @@ path = "./"
 num_classes = 0
 hyperparameter = False
 n_jobs_global = 1
-
-
-
-#dynamically_training(path_Nos_originaldata='PEI_NOS_DATA.csv', path_stored_new_data='stored.csv'  ,path_latest_data='log.csv',path_to_output="./",plots=True, hyperparameter_tuning = False,n_jobs=2)

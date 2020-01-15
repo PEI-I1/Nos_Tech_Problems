@@ -1,4 +1,4 @@
-import base64, json, pickle, redis
+import base64, json, pickle, redis, re
 import settings
 import msg_interpreter
 import ids
@@ -46,8 +46,8 @@ def solve():
                 ret_dict['msg'] = settings.UPROMPT[5]
                 
         elif exec_state.state == 1:
-            services_array = [('tv', 'TV'), ('televisão', 'TV'), ('televisao', 'TV'), ('internet', 'Internet'), ('net', 'Internet'), ('wifi', 'Internet'), ('voz', 'Voz')]
-            match_service = [x[1] for x in services_array if msg.lower() == x[0]]
+            services_array = [(r't(ele)?v(isao)?', 'TV'), (r'televisão', 'TV'), (r'(inter)?net', 'Internet'), (r'wifi', 'Internet'), (r'voz', 'Voz')]
+            match_service = [x[1] for x in services_array if re.search(x[0], msg.lower())]
             if match_service:
                 checker = exec_state.check_client_services(match_service[0])
                 if checker:
@@ -91,8 +91,8 @@ def solve():
                     ret_dict['msg'] = settings.UPROMPT[6]
 
         elif exec_state.state == 3:
-            options_array = [('sim', 1), ('s', 1), ('não', 0), ('nao', 0), ('n', 0)]
-            match_option = [x[1] for x in options_array if msg.lower() == x[0]]
+            options_array = [(r'\s*s(im)?', 1), (r'\s*n(ao)?', 0), (r'\s*não', 0)]
+            match_option = [x[1] for x in options_array if re.match(x[0], msg.lower())]
             if match_option:
                 option = match_option[0]
                 if option: # problem has been resolved
