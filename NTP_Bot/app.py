@@ -1,4 +1,4 @@
-import base64, json, pickle, redis, re
+import base64, json, pickle, redis, re, os
 import settings
 import msg_interpreter
 import ids
