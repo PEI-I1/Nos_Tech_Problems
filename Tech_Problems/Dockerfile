@@ -26,5 +26,5 @@ RUN python3.7 -m pip install -r requirements.txt --user
 CMD ./manage.py makemigrations && \
     ./manage.py migrate && \
     ./manage.py flush --no-input && \
-    ./manage.py loaddata fixture.json && \
+    ./manage.py loaddata technical_problems/model_files/database_population.json && \
     ./manage.py runserver 0.0.0.0:5005
