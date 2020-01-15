@@ -4,6 +4,7 @@ import joblib
 import pandas as pd
 import os
 from .training_model import dynamically_training
+import json
 
 def load_dict(filename) :    
     label_encoder = joblib.load(filename)
@@ -17,6 +18,8 @@ def load_model(filename):
 model = load_model(os.getcwd() + '/technical_problems/model_files/model')
 d = load_dict(os.getcwd() + '/technical_problems/model_files/features_dict')
 d_target = load_dict(os.getcwd() + '/technical_problems/model_files/target_dict')
+with open(os.getcwd() + '/technical_problems/model_files/output_mappings.json') as json_file:
+    output_mappings = json.load(json_file)
 
 columns = ['Equipamento_Tipo', 'Servico', 'Sintoma', 'Tarifario', 'Tipificacao_Nivel_1', 'Tipificacao_Nivel_2', 'Tipificacao_Nivel_3']
 
@@ -33,6 +36,7 @@ def inverse_encoding(inpArray):
 
 def target_decoded(target):
     target_decoded =  d_target['target'].inverse_transform(target)
+    target_decoded = [output_mappings.get(x, x) for x in target_decoded]
     return target_decoded
 
 def best_n_suggestions(probs,n=3):

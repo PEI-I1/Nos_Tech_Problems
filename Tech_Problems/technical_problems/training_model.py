@@ -90,7 +90,7 @@ def clean_contexto_saida(st) :
 
     n_split = len(split) 
     
-    regex = re.compile(r"^((\s*fechado\s*)|(.*mantém dificuldade.*)|(.*hit ok.*)|(.*cliente informado.*)|(\W*outro equipamento.*)|(.*não pretende soluções.*)|(.*não aceita propostas.*)|(\W*resolv\w[\w\s]*)|(.*atinge velocidade.*)|(^\d*$)|(^\W*$)|(.*aceita proposta sugerida\W*)|(\W*loja\W*)|(.*não consegue realizar procedimento\W*))$")
+    regex = re.compile(r"^((\s*fechado\s*)|(.*mantém dificuldade.*)|(.*hit ok.*)|(.*cliente informado.*)|(\W*outro equipamento.*)|(.*não pretende soluções.*)|(.*não aceita propostas.*)|(\W*resolv\w[\w\s]*)|(.*atinge velocidade.*)|(^\d*$)|(^\W*$)|(.*aceita proposta sugerida\W*)|(\W*loja\W*)|(.*não consegue realizar procedimento\W*)|(.*reincidente.*)|(.*configurações melhoram ligação\W*))")
     filtered = [i for i in split if not regex.match(i)]
     if (len(filtered)>0) :
         result = filtered[ len(filtered) - 1 ]
@@ -125,6 +125,7 @@ def clean_originaldata(data):
     value_counts = data['Contexto_Saida'].value_counts()
     to_remove = value_counts[value_counts <= threshold].index
     data['Contexto_Saida'].replace(to_remove,'linhas apoio', inplace=True)
+    data.dropna(inplace=True)
     data = data[['Sintoma','Tipificacao_Nivel_1','Tipificacao_Nivel_2','Tipificacao_Nivel_3','Equipamento_Tipo','Servico','Tarifario','Contexto_Saida' ]]
     return data
 
@@ -211,6 +212,35 @@ def target_distribution_plot(training_classes,testing_classes):
     plt.title('Class Frequency Testing %')
     plt.xlabel('Class')
     plt.ylabel('Frequency')
+    plt.show()
+
+def influence_number_samples_plot (data) :
+
+    features,target = target_selection(data)
+    features_encoded,d = data_discretization(features,True)
+    target_encoded,d_target = data_discretization(target,False)
+
+    n_samples_score = []
+    n_sizes = np.arange(4000,68000,4000)
+    for n in n_sizes:
+        train_size = int ( n * 0.75)
+        test_size =  int (n * 0.25)
+        (training_inputs,testing_inputs,training_classes, testing_classes) = train_test_split(features_encoded, target_encoded , train_size=train_size , test_size=test_size, random_state=1)
+        
+        rf = RandomForestClassifier(n_estimators=10, random_state=1)
+        rf.fit(training_inputs, training_classes)
+        score = rf.score(testing_inputs, testing_classes)
+        n_samples_score.append(score)
+    n_samples_score = np.array (n_samples_score)
+    print(n_sizes.size)
+    print(n_samples_score.size)
+    print(n_sizes)
+    print(n_samples_score)
+    fig, ax = plt.subplots()
+    ax.plot(n_sizes, n_samples_score)
+    ax.set(xlabel='Number of samples in training', ylabel='Accuracy',
+        title='Number os samples influence')
+    ax.grid()
     plt.show()
 
 def grid_search(X, y, nfolds,param_grid,model):
@@ -455,10 +485,12 @@ def dynamically_training(path_Nos_originaldata, path_stored_new_data, path_lates
     original_data.dropna(inplace=True)
 
     data = old_new_data_fusion(original_data,new_data)
-
+    
+    
     training_inputs,testing_inputs,training_classes, testing_classes, features_encoded , target_encoded, num_classes = training_setup(data)
     if plots :
          target_distribution_plot(training_classes,testing_classes)
+         influence_number_samples_plot (data)
     models = {
         DecisionTreeClassifier(random_state=1) : 0,
         svm.SVC(kernel='linear', C=1.0) : 0 ,
@@ -482,11 +514,10 @@ def dynamically_training(path_Nos_originaldata, path_stored_new_data, path_lates
     print("Model Saved !!! ")
     end = timer()
     print("\n\nDuration of training in minutes : " +  str((end - start)/60) + " minutes." )
+    
 
 
 path = "./"
 num_classes = 0
 hyperparameter = False
 n_jobs_global = 1
-
-#dynamically_training(path_Nos_originaldata='PEI_NOS_DATA.csv', path_stored_new_data='stored.csv'  ,path_latest_data='log.csv',path_to_output="./",plots=False, hyperparameter_tuning = False,n_jobs=2)

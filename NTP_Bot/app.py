@@ -1,12 +1,11 @@
-#!/usr/bin/env python3
-import base64, json, pickle, os, redis
+import base64, json, pickle, redis, re
 import settings
 import msg_interpreter
 import ids
 import requests
 from flask import Flask, request
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 
 app = Flask(__name__)
 
@@ -15,9 +14,9 @@ def solve():
     data = request.get_json()
     chat_id = data['idChat']
     msg = data['msg']
+    
     ret_dict = {'chat_id': chat_id, 'msg': ''}
-    redis_cli_key = str(chat_id) + '_ntp'
-    csr = redis_db.get(redis_cli_key)
+    csr = redis_db.get(chat_id)
 
     save_on_redis = True
 
@@ -47,8 +46,8 @@ def solve():
                 ret_dict['msg'] = settings.UPROMPT[5]
                 
         elif exec_state.state == 1:
-            services_array = [('tv', 'TV'), ('televisão', 'TV'), ('televisao', 'TV'), ('internet', 'Internet'), ('net', 'Internet'), ('wifi', 'Internet'), ('voz', 'Voz')]
-            match_service = [x[1] for x in services_array if msg.lower() == x[0]]
+            services_array = [(r't(ele)?v(isao)?', 'TV'), (r'televisão', 'TV'), (r'(inter)?net', 'Internet'), (r'wifi', 'Internet'), (r'voz', 'Voz')]
+            match_service = [x[1] for x in services_array if re.search(x[0], msg.lower())]
             if match_service:
                 checker = exec_state.check_client_services(match_service[0])
                 if checker:
@@ -92,8 +91,8 @@ def solve():
                     ret_dict['msg'] = settings.UPROMPT[6]
 
         elif exec_state.state == 3:
-            options_array = [('sim', 1), ('s', 1), ('não', 0), ('nao', 0), ('n', 0)]
-            match_option = [x[1] for x in options_array if msg.lower() == x[0]]
+            options_array = [(r'\s*s(im)?', 1), (r'\s*n(ao)?', 0), (r'\s*não', 0)]
+            match_option = [x[1] for x in options_array if re.match(x[0], msg.lower())]
             if match_option:
                 option = match_option[0]
                 if option: # problem has been resolved
@@ -131,9 +130,9 @@ def solve():
               'state': base64.encodebytes(pickle.dumps(exec_state)).decode()}
 
     if save_on_redis:
-        redis_db.set(redis_cli_key, json.dumps(cs).encode())
+        redis_db.set(chat_id, json.dumps(cs).encode())
     else:
-        redis_db.delete(redis_cli_key)
+        redis_db.delete(chat_id)
 
     return app.response_class(
         response=json.dumps(ret_dict),
@@ -166,40 +165,44 @@ def save_to_log(exec_state):
     log.write(';'.join(resp_array) + '\n')
     log.close()
 
-def loadSettings():
-    ''' Loads default settings from env variables
-    '''
-    s_host = os.getenv('SOLVER_HOST', '127.0.0.1')
-    s_port= os.getenv('SOLVER_PORT', '8000')
-    settings.SOLVER_ENDPOINT = settings.SOLVER_ENDPOINT.format(s_host, s_port)
-    settings.SOLVER_ENDPOINT_LOGIN = settings.SOLVER_ENDPOINT_LOGIN.format(s_host, s_port)
-    settings.SOLVER_ENDPOINT_SOLVE = settings.SOLVER_ENDPOINT_SOLVE.format(s_host, s_port)
-    settings.SOLVER_ENDPOINT_SERVICE_CHECK = settings.SOLVER_ENDPOINT_SERVICE_CHECK.format(s_host, s_port)
-    settings.SOLVER_ENDPOINT_UPDATE_LOG = settings.SOLVER_ENDPOINT_UPDATE_LOG.format(s_host, s_port)
-    settings.REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
-    settings.REDIS_PORT = os.getenv('REDIS_PORT', 6379)
-    
+
 def upload_csv():
-    files = {'problems_log': open(settings.FILENAME, 'rb')}
-    r = requests.post(settings.SOLVER_ENDPOINT_UPDATE_LOG, files=files)
+    ''' Upload csv file to Tech_Problems
+    '''
+    with open(settings.FILENAME) as f:
+        lines = len(f.readlines()) - 1
+
+    if lines > settings.LOG_MIN_NUMBER_LINES:
+        files = {'problems_log': open(settings.FILENAME, 'rb')}
+        r = requests.post(settings.SOLVER_ENDPOINT_UPDATE_LOG, files=files)
+        
+        if (r.status_code == 200):
+            log = open(settings.FILENAME, "w")
+            log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Contexto_Saida\n')
+            log.close()
  
 
 if __name__ == '__main__':
-    # start csv file
-    log = open(settings.FILENAME, "w")
-    log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Contexto_Saida\n')
-    log.close()
+    # start csv file if necessary
+    try:
+        with open(settings.FILENAME) as f:
+            lines = len(f.readlines())
+    except FileNotFoundError: # csv don't exist
+        lines = 0
+    if not lines:
+        log = open(settings.FILENAME, "w")
+        log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Contexto_Saida\n')
+        log.close()
 
-    loadSettings()
-    
     # redis connection
-    redis_db = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
+    redis_db = redis.Redis(host='127.0.0.1', port=6379, db=0)
     
     # load model for sentences similarity
     msg_interpreter.loadModelData()
 
+    # add scheduler to train model
     scheduler = BackgroundScheduler()
-    scheduler.add_job(upload_csv, 'cron', hour=4, minute=0)
+    scheduler.add_job(upload_csv, CronTrigger(hour=3)) # every day at 3AM
     scheduler.start()
 
-    app.run(host='0.0.0.0', port=5004, threaded=True)
+    app.run(host='0.0.0.0', port=5000, threaded=True)

@@ -9,7 +9,6 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 
 
-#FIXME: 
 @csrf_exempt
 def receive_csv(request):
     ''' Receive log of problems solved on NTP_Bot to improve the model
