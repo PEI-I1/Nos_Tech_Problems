@@ -182,6 +182,20 @@ def upload_csv():
             log.close()
  
 
+def loadSettings():
+    ''' Loads default settings from env variables
+    '''
+    s_host = os.getenv('SOLVER_HOST', '127.0.0.1')
+    s_port= os.getenv('SOLVER_PORT', '8000')
+    settings.SOLVER_ENDPOINT = settings.SOLVER_ENDPOINT.format(s_host, s_port)
+    settings.SOLVER_ENDPOINT_LOGIN = settings.SOLVER_ENDPOINT_LOGIN.format(s_host, s_port)
+    settings.SOLVER_ENDPOINT_SOLVE = settings.SOLVER_ENDPOINT_SOLVE.format(s_host, s_port)
+    settings.SOLVER_ENDPOINT_SERVICE_CHECK = settings.SOLVER_ENDPOINT_SERVICE_CHECK.format(s_host, s_port)
+    settings.SOLVER_ENDPOINT_UPDATE_LOG = settings.SOLVER_ENDPOINT_UPDATE_LOG.format(s_host, s_port)
+    settings.REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
+    settings.REDIS_PORT = os.getenv('REDIS_PORT', 6379)
+
+
 if __name__ == '__main__':
     # start csv file if necessary
     try:
@@ -194,15 +208,19 @@ if __name__ == '__main__':
         log.write('Servico;Equipamento_Tipo;Tarifario;Sintoma;Tipificacao_Nivel_1;Tipificacao_Nivel_2;Tipificacao_Nivel_3;Contexto_Saida\n')
         log.close()
 
+    loadSettings()
+    
     # redis connection
-    redis_db = redis.Redis(host='127.0.0.1', port=6379, db=0)
+    redis_db = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=0)
     
     # load model for sentences similarity
     msg_interpreter.loadModelData()
 
-    # add scheduler to train model
     scheduler = BackgroundScheduler()
+    scheduler.add_job(upload_csv, 'cron', hour=4, minute=0)
+    scheduler.start()
+
     scheduler.add_job(upload_csv, CronTrigger(hour=3)) # every day at 3AM
     scheduler.start()
 
-    app.run(host='0.0.0.0', port=5000, threaded=True)
+    app.run(host='0.0.0.0', port=5004, threaded=True)

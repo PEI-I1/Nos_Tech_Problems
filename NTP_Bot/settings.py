@@ -12,7 +12,6 @@ UPROMPT = [
     'Não existem mais sugestões para resolver o seu problema. A sair do modo de resolução de problemas técnicos...',
     'Não tem esse tipo de serviço contratado. Por favor tente novamente.'
 ]
-
 SOLVER_ENDPOINT = 'http://{}:{}/problems/'
 SOLVER_ENDPOINT_LOGIN = SOLVER_ENDPOINT + 'login'
 SOLVER_ENDPOINT_SOLVE = SOLVER_ENDPOINT + 'solve'
@@ -21,3 +20,5 @@ SOLVER_ENDPOINT_UPDATE_LOG = SOLVER_ENDPOINT + 'update_log'
 MAX_ERROR_COUNT = 3
 FILENAME = 'problems_log.csv'
 LOG_MIN_NUMBER_LINES = 10000
+REDIS_HOST=''
+REDIS_PORT=0

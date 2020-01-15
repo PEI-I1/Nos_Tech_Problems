@@ -1,7 +1,7 @@
-flask
-redis
-tensorflow
-tensorflow-hub
-tensorflow-text
-numpy
-apscheduler
+flask==1.1.1
+redis==3.3.11
+tensorflow==2.0.0
+tensorflow-hub==0.7.0
+tensorflow-text==2.0.1
+numpy==1.18.0
+apscheduler==3.6.3
