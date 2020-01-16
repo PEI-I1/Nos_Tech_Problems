@@ -23,4 +23,4 @@ FILENAME = 'problems_log.csv'
 LOG_MIN_NUMBER_LINES = 15000
 REDIS_HOST = ''
 REDIS_PORT = 0
-LINHAS_APOIO_SENTENCE = 'linhas apoio'
+LINHAS_APOIO_SENTENCE = 'Contactar as nossas linhas de apoio'
