@@ -15,6 +15,8 @@ keywords = {
         'login': [r'autentica(r|ção)', r'(\b|^)iniciar sessão(\b|$)'],
         'chamada': [r'(\b|^)ligar(\b|$)'],
         'quebras': [r'falha(s|r)'],
+        'ftth': [r'fibra'],
+        'tv': [r't(ele)?v(isao)?', r'image(m|ns)']
     },
     'tip_1':{
         'internet': [r'wifi', r'net', r'rede', r'wireless', r'ethernet'],
@@ -41,6 +43,7 @@ keywords = {
         'reboots': [r'reiniciar', r'ligar? e desligar?'],
         'specs': [r'contrat(ad)?o'],
         'visualiz.': [r'(\b|^)ver(\b|$)', r'(\b|^)vejo(\b|$)'],
-        'incorreto': [r'maus?', r'errados?']
+        'incorreto': [r'maus?', r'errados?'],
+        'hw/ sw': [r'h(ard)?w(are)?', r's(oft)?w(are)?', r'equipamentos?']
     }
 }

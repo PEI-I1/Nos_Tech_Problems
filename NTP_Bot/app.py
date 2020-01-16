@@ -24,7 +24,7 @@ def solve():
 
     if csr:
 
-        if msg == '/reset':
+        if re.match(r'^/reset(\s)*$', msg):
             save_on_redis = False
             ret_dict['msg'] = settings.UPROMPT[12]
 
