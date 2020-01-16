@@ -1,10 +1,10 @@
 UPROMPT = [
-    'Entraste no modo de resolução de problemas técnicos. Se em algum momento pretenderes sair deste modo utiliza o comando /reset.\n\nÉ necessário realizar uma autenticação que mostre que és cliente da NOS.\nIndica o teu nº de telemóvel e o NIF separados por um espaço (exemplo \'930000000 123456789\').',
+    'Entraste no modo de resolução de problemas técnicos. Se em algum momento pretenderes sair deste modo utiliza o comando /reset.\n\nÉ necessário realizar uma autenticação que mostre que és cliente da NOS.\nIndica o teu nº de telemóvel e o NIF separados por um espaço (exemplo <b>\'930000000 123456789\'</b>).',
     'Indica em qual dos seguintes serviços necessitas de assistência: TV, Internet, Voz.',
     'Descreve o problema em que necessitas de ajuda.',
     'Não foi possível reconhecer qual o serviço a que te referes, tenta novamente (TV, Internet ou Voz).',
-    'Não foi possível obter dados de um cliente com os dados que inseriste. Envia novamente o teu nº de telemóvel e o NIF separados por um espaço (exemplo \'930000000 123456789\').',
-    'Aconteceu um erro ao efetuar a operação de autenticação. Envia novamente o teu nº de telemóvel e o NIF separados por um espaço (exemplo \'930000000 123456789\').',
+    'Não foi possível obter dados de um cliente com os dados que inseriste. Envia novamente o teu nº de telemóvel e o NIF separados por um espaço (exemplo <b>\'930000000 123456789\'</b>).',
+    'Aconteceu um erro ao efetuar a operação de autenticação. Envia novamente o teu nº de telemóvel e o NIF separados por um espaço (exemplo <b>\'930000000 123456789\'</b>).',
     'Não foi possível reconhecer o problema descrito, tenta descrever o mesmo novamente.',
     'Foi atingido o máximo de tentativas para esta etapa do processo. A sair do modo de resolução de problemas técnicos...',
     'Não foi possível reconhecer a tua mensagem. A sugestão resolveu o seu problema? (sim/não)',

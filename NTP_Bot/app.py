@@ -86,7 +86,11 @@ def solve():
                     if success:
                         if solution == settings.LINHAS_APOIO_SENTENCE:
                             ret_dict['assunto'] = exec_state.service.lower()
-                        ret_dict['msg'] = 'Sugestão: ' + solution + '.\n\nResolveu o seu problema? (sim/não)'
+                            ret_dict['msg'] = 'Sugestão: ' + solution + '.\n\nA sair do modo de resolução de problemas técnicos...'
+                            ret_dict['chat_id'] = -2
+                            save_on_redis = False
+                        else:
+                            ret_dict['msg'] = 'Sugestão: ' + solution + '.\n\nResolveu o seu problema? (sim/não)'
                         exec_state.state = exec_state.state + 1
                         exec_state.error_count = 0
                     else:
@@ -96,6 +100,7 @@ def solve():
                     if exec_state.error_count == settings.MAX_ERROR_COUNT:
                         ret_dict['msg'] = settings.UPROMPT[7]
                         ret_dict['chat_id'] = -2
+                        ret_dict['assunto'] = exec_state.service.lower()
                         save_on_redis = False
                     else:
                         ret_dict['msg'] = settings.UPROMPT[6]
@@ -118,16 +123,22 @@ def solve():
                             new_suggestion = exec_state.suggestions[exec_state.suggestion_count]['prediction']
                             if new_suggestion == settings.LINHAS_APOIO_SENTENCE:
                                 ret_dict['assunto'] = exec_state.service.lower()
-                            ret_dict['msg'] = 'Outra sugestão: ' + new_suggestion + '.\n\nResolveu o seu problema? (sim/não)'
+                                ret_dict['msg'] = 'Outra sugestão: ' + new_suggestion + '.\n\nA sair do modo de resolução de problemas técnicos...'
+                                ret_dict['chat_id'] = -2
+                                save_on_redis = False
+                            else:
+                                ret_dict['msg'] = 'Outra sugestão: ' + new_suggestion + '.\n\nResolveu o seu problema? (sim/não)'
                         else: # no more suggestions
                             ret_dict['msg'] = settings.UPROMPT[10]
                             ret_dict['chat_id'] = -2
+                            ret_dict['assunto'] = exec_state.service.lower()
                             save_on_redis = False
                 else:
                     exec_state.error_count = exec_state.error_count + 1
                     if exec_state.error_count == settings.MAX_ERROR_COUNT:
                         ret_dict['msg'] = settings.UPROMPT[7]
-                        ret_dict['chat_id'] = -1
+                        ret_dict['chat_id'] = -2
+                        ret_dict['assunto'] = exec_state.service.lower()
                         save_on_redis = False
                     else:
                         ret_dict['msg'] = settings.UPROMPT[8]
