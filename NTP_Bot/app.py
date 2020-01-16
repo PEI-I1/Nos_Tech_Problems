@@ -51,7 +51,13 @@ def solve():
                     else:
                         ret_dict['msg'] = settings.UPROMPT[5]
                 else:
-                    ret_dict['msg'] = settings.UPROMPT[5]
+                    exec_state.error_count = exec_state.error_count + 1
+                    if exec_state.error_count == settings.MAX_ERROR_COUNT:
+                        ret_dict['msg'] = settings.UPROMPT[7]
+                        ret_dict['chat_id'] = -1
+                        save_on_redis = False
+                    else:
+                        ret_dict['msg'] = settings.UPROMPT[4]
                     
             elif exec_state.state == 1:
                 services_array = [(r't(ele)?v(isao)?', 'TV'), (r'televisão', 'TV'), (r'(inter)?net', 'Internet'), (r'wifi', 'Internet'), (r'voz', 'Voz')]
