@@ -96,7 +96,7 @@ def solve():
                             ret_dict['chat_id'] = -2
                             save_on_redis = False
                         else:
-                            ret_dict['msg'] = 'Sugestão: ' + solution + '.\n\nResolveu o seu problema? (sim/não)'
+                            ret_dict['msg'] = 'Sugestão: ' + solution + '.\n\nResolveu o seu problema? (<b>sim</b>/<b>não</b>)'
                         exec_state.state = exec_state.state + 1
                         exec_state.error_count = 0
                     else:
@@ -133,7 +133,7 @@ def solve():
                                 ret_dict['chat_id'] = -2
                                 save_on_redis = False
                             else:
-                                ret_dict['msg'] = 'Outra sugestão: ' + new_suggestion + '.\n\nResolveu o seu problema? (sim/não)'
+                                ret_dict['msg'] = 'Outra sugestão: ' + new_suggestion + '.\n\nResolveu o seu problema? (<b>sim</b>/<b>não</b>)'
                         else: # no more suggestions
                             ret_dict['msg'] = settings.UPROMPT[10]
                             ret_dict['chat_id'] = -2
